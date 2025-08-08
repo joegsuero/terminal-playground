@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Ver en GitHub"
+              aria-label="GitHub"
             >
               <Github className="w-6 h-6" />
             </a>

@@ -1,5 +1,3 @@
-// src/hooks/useDockerCommands.ts
-
 import { useState } from "react";
 import { commands, DockerCommandFunction } from "./docker";
 import { DockerContainer, DockerImage } from "@/types/types";
@@ -52,7 +50,6 @@ export const useDockerCommands = () => {
     const args = command.trim().split(/\s+/);
     const subcommand = args[1];
 
-    // Trata casos especiales de ayuda
     if (
       command.trim() === "docker" ||
       command.trim() === "docker --help" ||
@@ -70,14 +67,12 @@ export const useDockerCommands = () => {
       }
     }
 
-    // Busca el manejador de comando en el mapa
     const commandHandler = commands[subcommand] as DockerCommandFunction;
 
     if (commandHandler) {
       return commandHandler(args, setContainers, setImages, containers, images);
     }
 
-    // Maneja comandos de gestión (system, network, volume)
     if (commands[args[0]]) {
       const managementCommandHandler = commands[args[0]];
       if (managementCommandHandler) {

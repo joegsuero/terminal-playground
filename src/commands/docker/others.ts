@@ -1,5 +1,3 @@
-// src/dockerCommands/others.ts
-
 import { DockerCommandFunction } from "./index";
 
 export const handleOtherCommands: DockerCommandFunction = (

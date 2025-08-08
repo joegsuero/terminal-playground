@@ -71,6 +71,6 @@ export const commands: Record<string, Command> = {
   file: file,
   tar: tar,
   sort: sort,
-  ping: ping, // <-- Nuevo
-  traceroute: traceroute, // <-- Nuevo
+  ping: ping,
+  traceroute: traceroute,
 };

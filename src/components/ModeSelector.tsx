@@ -24,7 +24,6 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
     linux: {
       icon: <Terminal className="w-4 h-4" />,
       label: "Linux Terminal",
-      // Verde para Linux - usando clases de theme
       textColor: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-500/10 hover:bg-green-500/20",
       borderColor: "border-green-500/30",
@@ -32,7 +31,6 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
     docker: {
       icon: <Container className="w-4 h-4" />,
       label: "Docker Training",
-      // Azul para Docker - usando clases de theme
       textColor: "text-blue-500 dark:text-blue-400",
       bgColor: "bg-blue-500/10 hover:bg-blue-500/20",
       borderColor: "border-blue-500/30",
