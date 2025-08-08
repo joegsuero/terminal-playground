@@ -61,7 +61,12 @@ export const DockerTerminal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleCommand(currentCommand);
+    if (currentCommand == "clear") {
+      handleClear();
+      setCurrentCommand("");
+    } else {
+      handleCommand(currentCommand);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
