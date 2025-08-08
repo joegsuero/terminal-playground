@@ -1,7 +1,7 @@
 import React from "react";
 import { Container } from "lucide-react";
 import { dockerLessons } from "../../data/dockerLessons";
-import { TutorialBase } from "./TutorialBase";
+import { TutorialBase } from "./TutorialBase/TutorialBase";
 
 interface TutorialProps {
   onCommandSuggest: (command: string) => void;

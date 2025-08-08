@@ -1,7 +1,7 @@
 import React from "react";
 import { BookOpen, Terminal as TerminalIcon } from "lucide-react";
 import { lessons } from "@/data/linuxLessons";
-import { TutorialBase } from "./TutorialBase";
+import { TutorialBase } from "./TutorialBase/TutorialBase";
 
 interface TutorialProps {
   onCommandSuggest: (command: string) => void;
