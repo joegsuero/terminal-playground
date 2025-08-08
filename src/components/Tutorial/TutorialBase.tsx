@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { CheckCircle, Circle } from "lucide-react";
+import { CheckCircle, Circle, ChevronDown, ChevronUp } from "lucide-react";
 import { Lesson } from "@/types/types";
 
 interface TutorialBaseProps {
@@ -22,6 +22,7 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
     new Set()
   );
   const [currentCommandIndex, setCurrentCommandIndex] = useState(0);
+  const [expandedLesson, setExpandedLesson] = useState<number | null>(null);
 
   const lesson = lessons[currentLesson];
 
@@ -29,13 +30,13 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
     if (currentCommandIndex < lesson.commands.length - 1) {
       setCurrentCommandIndex((prev) => prev + 1);
     } else {
-      // Mark lesson as completed
       setCompletedLessons((prev) => new Set([...prev, lesson.id]));
-
-      // Move to next lesson
       if (currentLesson < lessons.length - 1) {
         setCurrentLesson((prev) => prev + 1);
         setCurrentCommandIndex(0);
+        setExpandedLesson(currentLesson + 1); // Auto-expand next lesson
+      } else {
+        setExpandedLesson(null); // Collapse when finished last lesson
       }
     }
   };
@@ -49,6 +50,7 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
   const handleLessonSelect = (index: number) => {
     setCurrentLesson(index);
     setCurrentCommandIndex(0);
+    setExpandedLesson(expandedLesson === index ? null : index);
   };
 
   const handleTryCommand = () => {
@@ -59,7 +61,8 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
   const progress = Math.round((completedLessons.size / lessons.length) * 100);
 
   return (
-    <div className="h-full bg-card border border-border rounded-lg overflow-hidden">
+    <div className="h-full bg-card border border-border rounded-lg overflow-hidden flex flex-col">
+      {/* Header with progress */}
       <div className="bg-secondary border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 mb-2">
           {icon}
@@ -77,18 +80,18 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
         </div>
       </div>
 
-      <div className="p-4 space-y-4 h-full overflow-y-auto">
-        {/* Lesson List */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Lessons</h3>
-          {lessons.map((l, index) => (
+      {/* Lessons list with accordion */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <h3 className="text-sm font-medium text-muted-foreground sticky top-0 bg-card pb-2">
+          Lessons
+        </h3>
+
+        {lessons.map((l, index) => (
+          <div key={l.id} className="border-border rounded-lg overflow-hidden">
             <button
-              key={l.id}
               onClick={() => handleLessonSelect(index)}
-              className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                currentLesson === index
-                  ? "border-primary bg-primary/10"
-                  : "border-border hover:bg-muted"
+              className={`w-full text-left p-3 transition-colors flex justify-between items-center ${
+                currentLesson === index ? "bg-primary/10" : "hover:bg-muted"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -99,78 +102,84 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
                 )}
                 <span className="font-medium">{l.title}</span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {l.description}
-              </p>
+              {expandedLesson === index ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
             </button>
-          ))}
-        </div>
 
-        {/* Current Lesson */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {icon}
-              {lesson.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              {lesson.commandExplanations[currentCommandIndex]}
-            </p>
+            {expandedLesson === index && (
+              <div className="p-4 space-y-4 bg-muted/10 border-t">
+                <p className="text-sm text-muted-foreground">{l.description}</p>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">
-                  Command {currentCommandIndex + 1} of {lesson.commands.length}
-                </h4>
-                <span className="text-sm text-muted-foreground">
-                  {Math.round(
-                    ((currentCommandIndex + 1) / lesson.commands.length) * 100
-                  )}
-                  %
-                </span>
-              </div>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">
+                      Command {currentCommandIndex + 1} of {l.commands.length}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm">Current Command</h4>
+                        <span className="text-xs text-muted-foreground">
+                          {Math.round(
+                            ((currentCommandIndex + 1) / l.commands.length) *
+                              100
+                          )}
+                          %
+                        </span>
+                      </div>
 
-              <div className="bg-terminal-bg p-3 rounded border font-mono text-sm">
-                <span className="text-terminal-prompt">$ </span>
-                <span className="text-terminal-text">
-                  {lesson.commands[currentCommandIndex]}
-                </span>
-              </div>
+                      <div className="bg-terminal-bg p-3 rounded border font-mono text-sm">
+                        <span className="text-terminal-prompt">$ </span>
+                        <span className="text-terminal-text">
+                          {l.commands[currentCommandIndex]}
+                        </span>
+                      </div>
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleTryCommand}
-                  className="flex-1"
-                  variant="default"
-                >
-                  Try This Command
-                </Button>
-                <Button
-                  onClick={handlePrevCommand}
-                  disabled={currentCommandIndex === 0}
-                  variant="outline"
-                  size="sm"
-                >
-                  Prev
-                </Button>
-                <Button onClick={handleNextCommand} variant="outline" size="sm">
-                  {currentCommandIndex === lesson.commands.length - 1
-                    ? "Complete"
-                    : "Next"}
-                </Button>
-              </div>
-            </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleTryCommand}
+                          className="flex-1"
+                          variant="default"
+                          size="sm"
+                        >
+                          Try This Command
+                        </Button>
+                        <Button
+                          onClick={handlePrevCommand}
+                          disabled={currentCommandIndex === 0}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Prev
+                        </Button>
+                        <Button
+                          onClick={handleNextCommand}
+                          variant="outline"
+                          size="sm"
+                        >
+                          {currentCommandIndex === l.commands.length - 1
+                            ? "Complete"
+                            : "Next"}
+                        </Button>
+                      </div>
+                    </div>
 
-            {lesson.expectedOutputs && (
-              <div className="text-sm text-muted-foreground">
-                <strong>Expected:</strong>{" "}
-                {lesson.expectedOutputs[currentCommandIndex]}
+                    {l.expectedOutputs && (
+                      <div className="text-sm text-muted-foreground">
+                        <strong>Expected:</strong>{" "}
+                        {l.expectedOutputs[currentCommandIndex]}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
     </div>
   );
