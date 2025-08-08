@@ -29,7 +29,7 @@ const Index = () => {
     >
       <Header mode={mode} onModeChange={handleModeChange} />
 
-      <div className="lg:h-[calc(100vh-6rem)] overflow-y-auto snap-y snap-mandatory">
+      <div className="lg:h-[calc(100vh-6rem)] overflow-y-auto snap-y snap-mandatory terminal-scroll">
         <div className="lg:h-[calc(100vh-6rem)] snap-start">
           <HeroSection mode={mode} />
         </div>

@@ -20,6 +20,7 @@ export const LinuxTerminal: React.FC = () => {
   useEffect(() => {
     if (commandToExecute) {
       setInput(commandToExecute);
+      setCursorPosition(commandToExecute.length);
       inputRef.current?.focus();
       clearCommand();
     }

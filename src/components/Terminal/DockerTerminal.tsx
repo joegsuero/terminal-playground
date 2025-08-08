@@ -35,6 +35,7 @@ export const DockerTerminal: React.FC = () => {
   useEffect(() => {
     if (commandToExecute) {
       setCurrentCommand(commandToExecute);
+      setCursorPosition(commandToExecute.length);
       inputRef.current?.focus();
       clearCommand();
     }
