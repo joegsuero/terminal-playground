@@ -29,14 +29,13 @@ const Index = () => {
     >
       <Header mode={mode} onModeChange={handleModeChange} />
 
-      <div className="h-[calc(100vh-6rem)] overflow-y-auto snap-y snap-mandatory">
-        <div className="h-[calc(100vh-6rem)] snap-start">
+      <div className="lg:h-[calc(100vh-6rem)] overflow-y-auto snap-y snap-mandatory">
+        <div className="lg:h-[calc(100vh-6rem)] snap-start">
           <HeroSection mode={mode} />
         </div>
 
         <div className="snap-start">
           <MainInterface mode={mode} onCommandSuggest={handleCommandSuggest} />
-          {/* <FooterSection mode={mode} /> */}
         </div>
       </div>
     </div>

@@ -77,30 +77,39 @@ export const LessonAccordion: React.FC<LessonAccordionProps> = ({
                   </span>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                   <Button
                     onClick={() =>
                       onTryCommand(lesson.commands[currentCommandIndex])
                     }
-                    className="flex-1"
+                    className="flex-1 py-2"
                     variant="default"
                     size="sm"
                   >
                     Try This Command
                   </Button>
-                  <Button
-                    onClick={onPrevCommand}
-                    disabled={currentCommandIndex === 0}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Prev
-                  </Button>
-                  <Button onClick={onNextCommand} variant="outline" size="sm">
-                    {currentCommandIndex === lesson.commands.length - 1
-                      ? "Complete"
-                      : "Next"}
-                  </Button>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={onPrevCommand}
+                      disabled={currentCommandIndex === 0}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Prev
+                    </Button>
+                    <Button
+                      onClick={onNextCommand}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      {currentCommandIndex === lesson.commands.length - 1
+                        ? "Complete"
+                        : "Next"}
+                    </Button>
+                  </div>
                 </div>
               </div>
 

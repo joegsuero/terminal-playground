@@ -41,7 +41,7 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
 
   return (
     <div
-      className={`h-full ${
+      className={`h-full min-h-96 ${
         themeClasses[theme].bg
       } border border-border rounded-lg flex flex-col overflow-hidden ${
         theme === "docker" ? "shadow-2xl docker-theme" : ""
