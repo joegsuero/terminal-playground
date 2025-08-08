@@ -34,3 +34,12 @@ export interface Command {
     commandHistory?: string[]
   ) => TerminalLine[];
 }
+
+export interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  commands: string[];
+  commandExplanations: string[];
+  expectedOutputs?: string[];
+}

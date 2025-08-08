@@ -1,22 +1,21 @@
-export interface DockerLesson {
-  id: string;
-  title: string;
-  description: string;
-  commands: string[];
-  explanation: string;
-  expectedOutput?: string;
-}
+import { Lesson } from "@/types/types";
 
-export const dockerLessons: DockerLesson[] = [
+export const dockerLessons: Lesson[] = [
   {
     id: "1",
     title: "Docker Basics",
     description: "Learn Docker fundamentals and basic commands",
     commands: ["docker --version", "docker info", "docker --help"],
-    explanation:
-      "Start by checking Docker installation and getting familiar with basic Docker commands. docker --version shows version info, docker info displays system information.",
-    expectedOutput:
-      "Version information, system details, and help documentation",
+    commandExplanations: [
+      "Checks the installed Docker version",
+      "Displays detailed system-wide Docker information",
+      "Shows all available Docker commands and options",
+    ],
+    expectedOutputs: [
+      "Docker version information (e.g., 'Docker version 20.10.12')",
+      "Detailed configuration and resource information",
+      "List of available Docker commands and how to use them",
+    ],
   },
   {
     id: "2",
@@ -28,9 +27,18 @@ export const dockerLessons: DockerLesson[] = [
       "docker pull node:16-alpine",
       "docker images",
     ],
-    explanation:
-      "Docker images are templates for containers. docker images lists local images, docker pull downloads images from Docker Hub.",
-    expectedOutput: "List of images, download progress, and updated image list",
+    commandExplanations: [
+      "Lists all locally available Docker images",
+      "Downloads the latest nginx image from Docker Hub",
+      "Downloads the Node.js 16 Alpine image (a lightweight Linux distribution)",
+      "Lists images again to show the newly downloaded ones",
+    ],
+    expectedOutputs: [
+      "List of currently installed images (empty if first run)",
+      "Download progress for nginx image",
+      "Download progress for Node.js Alpine image",
+      "Updated image list showing both new images",
+    ],
   },
   {
     id: "3",
@@ -41,9 +49,16 @@ export const dockerLessons: DockerLesson[] = [
       "docker run -d --name my-nginx -p 8080:80 nginx",
       "docker ps",
     ],
-    explanation:
-      "docker run creates and starts containers. -d runs in detached mode, --name assigns a name, -p maps ports. docker ps shows running containers.",
-    expectedOutput: "Hello world message, container ID, and container listing",
+    commandExplanations: [
+      "Runs the hello-world container (a simple test container)",
+      "Runs nginx in detached mode (-d), names it 'my-nginx', and maps port 8080 to 80",
+      "Lists all currently running containers",
+    ],
+    expectedOutputs: [
+      "Welcome message from the hello-world container",
+      "Container ID of the newly created nginx container",
+      "List showing your running nginx container with port mapping",
+    ],
   },
   {
     id: "4",
@@ -56,9 +71,20 @@ export const dockerLessons: DockerLesson[] = [
       "docker start my-nginx",
       "docker ps",
     ],
-    explanation:
-      "Learn to control container lifecycle. docker stop stops containers, docker start restarts them. Use -a with ps to see all containers.",
-    expectedOutput: "Container status changes and updated listings",
+    commandExplanations: [
+      "Lists running containers (should show my-nginx)",
+      "Stops the my-nginx container",
+      "Lists all containers including stopped ones (-a flag)",
+      "Restarts the stopped my-nginx container",
+      "Lists running containers again to verify restart",
+    ],
+    expectedOutputs: [
+      "Initial list showing my-nginx running",
+      "Confirmation that my-nginx was stopped",
+      "List showing my-nginx with 'Exited' status",
+      "Confirmation that my-nginx was started",
+      "Final list showing my-nginx running again",
+    ],
   },
   {
     id: "5",
@@ -69,10 +95,16 @@ export const dockerLessons: DockerLesson[] = [
       "docker inspect my-nginx",
       "docker stats",
     ],
-    explanation:
-      "docker logs shows container output, docker inspect provides detailed info, docker stats displays resource usage in real-time.",
-    expectedOutput:
-      "Application logs, detailed container information, and resource statistics",
+    commandExplanations: [
+      "Shows the logs/output from the nginx container",
+      "Displays detailed configuration and state information about the container",
+      "Shows live resource usage statistics for running containers",
+    ],
+    expectedOutputs: [
+      "Nginx access/error logs",
+      "JSON-formatted container details (IP, ports, mounts, etc.)",
+      "Real-time CPU, memory, and network usage for all containers",
+    ],
   },
   {
     id: "6",
@@ -83,10 +115,16 @@ export const dockerLessons: DockerLesson[] = [
       "docker exec -it my-nginx bash",
       "exit",
     ],
-    explanation:
-      "Use -it for interactive terminals. docker exec runs commands in existing containers. Practice entering and exiting container shells.",
-    expectedOutput:
-      "Interactive shell access and command execution inside containers",
+    commandExplanations: [
+      "Starts an interactive Ubuntu container with bash shell (-it flags)",
+      "Executes bash inside the already running nginx container",
+      "Exits the interactive shell (works in both cases)",
+    ],
+    expectedOutputs: [
+      "Ubuntu container's bash prompt (root@container-id:/#)",
+      "Nginx container's bash prompt (if available)",
+      "Returns you to your host machine's terminal",
+    ],
   },
   {
     id: "7",
@@ -97,10 +135,16 @@ export const dockerLessons: DockerLesson[] = [
       "docker images",
       "docker run my-app",
     ],
-    explanation:
-      "docker build creates images from Dockerfiles. -t tags the image with a name. Learn the fundamentals of image creation.",
-    expectedOutput:
-      "Build process output, new image in listing, and successful container run",
+    commandExplanations: [
+      "Builds an image from Dockerfile in current directory (.) and tags it as 'my-app'",
+      "Lists images to verify your new image was created",
+      "Runs a container from your custom image",
+    ],
+    expectedOutputs: [
+      "Build process output showing each Dockerfile instruction",
+      "Image list showing your new 'my-app' image",
+      "Output from running your application (depends on your Dockerfile)",
+    ],
   },
   {
     id: "8",
@@ -112,10 +156,18 @@ export const dockerLessons: DockerLesson[] = [
       "docker run -v my_volume:/data alpine",
       "docker volume inspect my_volume",
     ],
-    explanation:
-      "Volumes persist data beyond container lifecycle. docker volume manages volumes, -v mounts volumes to containers.",
-    expectedOutput:
-      "Volume creation confirmation, volume listings, and detailed volume information",
+    commandExplanations: [
+      "Creates a named volume for persistent storage",
+      "Lists all Docker volumes",
+      "Runs an Alpine container with the volume mounted at /data",
+      "Shows detailed information about the volume",
+    ],
+    expectedOutputs: [
+      "Confirmation of volume creation ('my_volume')",
+      "List showing your new volume among others",
+      "Container output (if any) with the volume mounted",
+      "Volume details including mountpoint on host",
+    ],
   },
   {
     id: "9",
@@ -127,10 +179,18 @@ export const dockerLessons: DockerLesson[] = [
       "docker run --network my-network --name web nginx",
       "docker network inspect my-network",
     ],
-    explanation:
-      "Docker networks enable container communication. Learn about bridge, host, and custom networks. Connect containers to networks.",
-    expectedOutput:
-      "Network listings, creation confirmations, and network configuration details",
+    commandExplanations: [
+      "Lists available Docker networks",
+      "Creates a new custom bridge network",
+      "Runs an nginx container attached to your custom network",
+      "Shows detailed configuration of your network",
+    ],
+    expectedOutputs: [
+      "List of default networks (bridge, host, none)",
+      "Confirmation of network creation",
+      "Nginx container ID running on your network",
+      "Network details including connected containers",
+    ],
   },
   {
     id: "10",
@@ -142,10 +202,18 @@ export const dockerLessons: DockerLesson[] = [
       "docker ps",
       "docker logs app",
     ],
-    explanation:
-      "Learn to connect multiple containers. Use environment variables with -e, link containers with --link (deprecated but educational).",
-    expectedOutput:
-      "Multiple running containers, connection establishment, and application logs",
+    commandExplanations: [
+      "Runs a PostgreSQL container with environment variable for password",
+      "Runs a Node.js container linked to the PostgreSQL container",
+      "Lists both running containers",
+      "Shows logs from the Node.js application",
+    ],
+    expectedOutputs: [
+      "PostgreSQL container ID",
+      "Node.js container ID",
+      "List showing both containers running",
+      "Application logs (may show database connection attempts)",
+    ],
   },
   {
     id: "11",
@@ -157,10 +225,18 @@ export const dockerLessons: DockerLesson[] = [
       "docker rmi $(docker images -q)",
       "docker system prune",
     ],
-    explanation:
-      "Important housekeeping commands. Stop all containers, remove containers and images, and clean up system resources with prune.",
-    expectedOutput:
-      "Cleanup confirmations and reclaimed storage space information",
+    commandExplanations: [
+      "Stops all running containers ($(docker ps -q) gets all container IDs)",
+      "Removes all containers (running and stopped)",
+      "Removes all images",
+      "Cleans up unused containers, networks, images (dangling), and build cache",
+    ],
+    expectedOutputs: [
+      "List of stopped containers",
+      "List of removed containers",
+      "List of removed images",
+      "Summary of reclaimed space",
+    ],
   },
   {
     id: "12",
@@ -172,9 +248,17 @@ export const dockerLessons: DockerLesson[] = [
       "docker load -i nginx.tar",
       "docker tag nginx my-registry/nginx",
     ],
-    explanation:
-      "Learn advanced operations: commit containers to images, save/load images as tar files, and tag images for registries.",
-    expectedOutput:
-      "New image creation, file operations, and successful image tagging",
+    commandExplanations: [
+      "Creates a new image from a running container's changes",
+      "Saves an image to a tar archive file",
+      "Loads an image from a tar archive",
+      "Tags an image for pushing to a custom registry",
+    ],
+    expectedOutputs: [
+      "New image ID for my-custom-nginx",
+      "No output on success (creates nginx.tar file)",
+      "Loaded image details",
+      "No output on success (new tag appears in docker images)",
+    ],
   },
 ];

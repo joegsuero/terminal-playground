@@ -1,7 +1,7 @@
 import React from "react";
 import { LinuxTerminal } from "@/components/Terminal/LinuxTerminal";
 import { DockerTerminal } from "@/components/Terminal/DockerTerminal";
-import { Tutorial } from "@/components/Tutorial/LinuxTutorial";
+import { LinuxTutorial } from "@/components/Tutorial/LinuxTutorial";
 import { DockerTutorial } from "@/components/Tutorial/DockerTutorial";
 import { TrainingMode } from "@/types/types";
 
@@ -30,7 +30,7 @@ export const MainInterface: React.FC<MainInterfaceProps> = ({
         return <DockerTutorial onCommandSuggest={onCommandSuggest} />;
       case "linux":
       default:
-        return <Tutorial onCommandSuggest={onCommandSuggest} />;
+        return <LinuxTutorial onCommandSuggest={onCommandSuggest} />;
     }
   };
 
