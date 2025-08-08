@@ -10,7 +10,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({ mode }) => {
   const data = modeSpecificData[mode];
 
   return (
-    <footer className="text-center text-muted-foreground mb-10">
+    <footer className="text-center text-muted-foreground pb-10">
       <p className="mb-2">{data.footerText}</p>
       <p className="text-sm">
         Try commands like:{" "}

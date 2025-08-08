@@ -41,18 +41,21 @@
   color: #888;
 }
 
-/* Habilita scroll snapping en el contenedor */
 @supports (scroll-snap-type: y mandatory) {
   .snap-y {
     scroll-snap-type: y mandatory;
   }
 }
 
-.snap-start {
-  scroll-snap-align: start;
+.h-\[calc\(100vh-6rem\)\] {
+  height: calc(100vh - 6rem);
 }
 
-/* Asegura que cada sección ocupe toda la altura visible */
-.h-\[calc\(100vh-4rem\)\] {
-  height: calc(100vh - 4rem); /* Resta la altura del header */
+.h-\[calc\(100vh-6rem\)\] > div:first-child {
+  height: calc(100vh - 6rem);
+  min-height: calc(100vh - 6rem);
+}
+
+.h-\[calc\(100vh-6rem\)\] > div:last-child {
+  min-height: calc(100vh - 6rem);
 }
