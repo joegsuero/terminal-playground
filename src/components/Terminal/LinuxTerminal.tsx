@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { TerminalBase } from "./TerminalBase";
 import { Terminal } from "lucide-react";
 import { useLinuxCommands } from "@/commands/useLinuxCommands";
+import { useTerminalStore } from "@/store/terminalStore";
 
 export const LinuxTerminal: React.FC = () => {
   const [input, setInput] = useState("");
@@ -10,10 +11,19 @@ export const LinuxTerminal: React.FC = () => {
   const { history, executeCommand, getPrompt, navigateHistory } =
     useLinuxCommands();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { commandToExecute, clearCommand } = useTerminalStore();
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (commandToExecute) {
+      setInput(commandToExecute);
+      inputRef.current?.focus();
+      clearCommand();
+    }
+  }, [commandToExecute, clearCommand]);
 
   const handleCursorChange = () => {
     if (inputRef.current) {

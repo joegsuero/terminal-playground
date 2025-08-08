@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { TerminalBase } from "./TerminalBase";
 import { Container, Maximize2, Minimize2 } from "lucide-react";
 import { useDockerCommands } from "@/commands/useDockerCommands";
+import { useTerminalStore } from "@/store/terminalStore";
 
 export const DockerTerminal: React.FC = () => {
   const { executeDockerCommand } = useDockerCommands();
@@ -25,10 +26,19 @@ export const DockerTerminal: React.FC = () => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isMaximized, setIsMaximized] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { commandToExecute, clearCommand } = useTerminalStore();
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (commandToExecute) {
+      setCurrentCommand(commandToExecute);
+      inputRef.current?.focus();
+      clearCommand();
+    }
+  }, [commandToExecute, clearCommand]);
 
   const handleCursorChange = () => {
     if (inputRef.current) {

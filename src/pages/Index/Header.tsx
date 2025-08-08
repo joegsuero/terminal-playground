@@ -16,8 +16,8 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
-      <div className="container mx-auto lg:px-2 px-6 py-4 fix">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto lg:px-2 px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Icon className="w-8 h-8 text-primary" />
             <div>
@@ -27,18 +27,21 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <ModeSelector currentMode={mode} onModeChange={onModeChange} />
-            <Badge variant="secondary">Beta</Badge>
-            <a
-              href="https://github.com/joegsuero/terminal-playground"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="GitHub"
-            >
-              <Github className="w-6 h-6" />
-            </a>
+
+          <div className="flex flex-col items-center w-full sm:w-auto">
+            <div className="flex items-center gap-4">
+              <ModeSelector currentMode={mode} onModeChange={onModeChange} />
+              <Badge variant="secondary">Beta</Badge>
+              <a
+                href="https://github.com/joegsuero/terminal-playground"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="GitHub"
+              >
+                <Github className="w-6 h-6" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

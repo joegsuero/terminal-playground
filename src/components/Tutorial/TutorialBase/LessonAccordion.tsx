@@ -3,6 +3,7 @@ import { CheckCircle, Circle, ChevronDown, ChevronUp } from "lucide-react";
 import { Lesson } from "@/types/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useTerminalStore } from "@/store/terminalStore";
 
 interface LessonAccordionProps {
   lesson: Lesson;
@@ -24,11 +25,16 @@ export const LessonAccordion: React.FC<LessonAccordionProps> = ({
   isCompleted,
   currentCommandIndex,
   onSelect,
-  onTryCommand,
   onPrevCommand,
   onNextCommand,
   innerRef,
 }) => {
+  const { setCommandToExecute } = useTerminalStore();
+
+  const handleTryCommand = () => {
+    setCommandToExecute(lesson.commands[currentCommandIndex]);
+  };
+
   return (
     <div ref={innerRef} className="border-border rounded-lg overflow-hidden">
       <button
@@ -79,9 +85,7 @@ export const LessonAccordion: React.FC<LessonAccordionProps> = ({
 
                 <div className="flex flex-col gap-2">
                   <Button
-                    onClick={() =>
-                      onTryCommand(lesson.commands[currentCommandIndex])
-                    }
+                    onClick={handleTryCommand}
                     className="flex-1 py-2"
                     variant="default"
                     size="sm"
