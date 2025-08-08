@@ -1,78 +1,92 @@
-# Terminal Playground 🚀
+# Terminal Playground
 
-[![GitHub stars](https://img.shields.io/github/stars/joegsuero/terminal-playground?style=social)](https://github.com/joegsuero/terminal-playground/stargazers)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+**Learn Linux and Docker commands through a browser-based interactive environment—no local setup required.**
 
-An interactive browser-based terminal playground designed to help beginners learn Linux and Docker commands without complex setup!
+## 🚀 The Problem This Solves
 
-## 🌟 Features
+Learning command-line tools presents a steep barrier for beginners:
 
-- **Zero-configuration learning** - Start practicing immediately in your browser
-- **Interactive Linux terminal** - Learn essential Linux commands with instant feedback
-- **Docker playground** - Experiment with Docker commands without local installation
-- **Structured lessons** - Guided learning path from beginner to advanced concepts
-- **Safe environment** - Experiment freely without breaking your system
-- **Real-time output** - See command results instantly
+- ⚠️ Complex local environment setup
+- ⚠️ Risk of system misconfiguration
+- ⚠️ Lack of structured learning paths
+- ⚠️ No safe space for experimentation
 
-## 🚀 Getting Started
+This project eliminates those friction points by providing:  
+✔️ Realistic terminal emulation in the browser  
+✔️ Pre-configured Linux/Docker environments  
+✔️ Guided lessons with immediate feedback  
+✔️ Zero-risk experimentation sandbox
 
-1. **Access the playground**: Visit [live demo link] (if deployed)
-2. **Choose your terminal**: Select Linux or Docker mode
-3. **Follow lessons**: Complete interactive tutorials
-4. **Experiment**: Try commands in the terminal
+## ✨ Key Features
 
-## 🛠️ How It Works
+- **📟 Interactive Terminals**  
+  Fully functional Linux shell and Docker CLI simulator
 
-This application provides:
+- **📚 Progressive Learning**  
+  Curriculum from `ls` to `docker compose`
 
-- A fully interactive terminal emulator in your browser
-- Simulated Linux environment with common commands
-- Docker command interpreter with realistic outputs
-- Progressive lessons with explanations and examples
-- "Try This Command" functionality for guided learning
+- **🆘 Contextual Help**  
+  Built-in command explanations and examples
 
-## 📚 Learning Path
+- **🛡️ Safe Environment**  
+  Execute `rm -rf` without fear
 
-### Linux Basics
+## 🛠️ Technology Stack
 
-- File system navigation
-- File operations
-- Permissions
-- Process management
+| Component        | Implementation      |
+| ---------------- | ------------------- |
+| Frontend         | React + TypeScript  |
+| State Management | Zustand             |
+| UI Components    | Shadcn/ui           |
+| Command Parsing  | Custom interpreters |
 
-### Docker Fundamentals
+## 🏁 Getting Started
 
-- Container lifecycle
-- Image management
-- Networking
-- Volume operations
+```bash
+git clone https://github.com/joegsuero/terminal-playground.git
+cd terminal-playground
+npm install
+npm run dev
+```
 
-## 💻 Technologies Used
+## 🌟 Contributing
 
-- React + TypeScript
-- Zustand (state management)
-- Lucide React (icons)
-- Tailwind CSS (styling)
-- Vite (build tool)
+We welcome and value all contributions. Focus areas include:
 
-## 🤝 Contributing
+### 🧩 Command Support
 
-Contributions are welcome! Please open an issue or submit a PR for any:
+- Add new Linux/Docker commands
+- Improve existing command interpretations
+- Expand error handling scenarios
 
-- Bug fixes
-- Additional commands
-- Improved lessons
-- UX enhancements
+### 📖 Educational Content
 
-## ⭐ Support the Project
+- Develop new lesson modules
+- Enhance command explanations
+- Create practical examples
 
-If you find this project helpful:
+### ♿ Accessibility
 
-1. **Give it a star** ⭐ - it helps others discover the tool
-2. **Share with friends** 👥 - spread the learning
-3. **Provide feedback** 💬 - open issues with suggestions
+- Improve screen reader support
+- Add keyboard navigation
+- Enhance color contrast
 
-Your support motivates further development!
+### 🚀 Performance
+
+- Optimize terminal rendering
+- Reduce bundle size
+- Improve startup time
+
+**Process**:
+
+1. Open an issue to discuss your proposal
+2. Fork the repository
+3. Submit a pull request with:
+   - Clear description of changes
+   - Relevant tests
+   - Updated documentation
+
+<!-- See our detailed [CONTRIBUTING.md](CONTRIBUTING.md) for coding standards and workflow. -->
 
 ## 📬 Contact
 
@@ -84,4 +98,4 @@ Connect with me on [LinkedIn](https://www.linkedin.com/in/joegsuero) for:
 
 ## License
 
-MIT © [José Daniel García Suero](https://github.com/joegsuero)
+MIT © [José Daniel García](https://github.com/joegsuero)
