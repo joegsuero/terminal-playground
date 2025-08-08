@@ -8,7 +8,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write   # Para poder hacer push a gh-pages
+      pages: write      # Necesario para GitHub Pages
+      id-token: write   # Para autenticación OIDC
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
