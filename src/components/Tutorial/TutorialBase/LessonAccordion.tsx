@@ -65,13 +65,9 @@ export const LessonAccordion: React.FC<LessonAccordionProps> = ({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm">Current Command</h4>
-                  <span className="text-xs text-muted-foreground">
-                    {Math.round(
-                      ((currentCommandIndex + 1) / lesson.commands.length) * 100
-                    )}
-                    %
-                  </span>
+                  <h6 className="font-medium text-sm">
+                    {lesson.commandExplanations[currentCommandIndex]}
+                  </h6>
                 </div>
 
                 <div className="bg-terminal-bg p-3 rounded border font-mono text-sm">

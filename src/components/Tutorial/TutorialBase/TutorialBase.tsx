@@ -23,7 +23,6 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
   const [currentCommandIndex, setCurrentCommandIndex] = useState(0);
   const [expandedLesson, setExpandedLesson] = useState<number | null>(null);
 
-  // Usamos un callback ref para manejar las referencias
   const lessonRefs = useRef<(HTMLDivElement | null)[]>([]);
   const setLessonRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
@@ -64,7 +63,6 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
     setCurrentCommandIndex(0);
     setExpandedLesson(expandedLesson === index ? null : index);
 
-    // Scroll después de que el estado se haya actualizado
     setTimeout(() => {
       lessonRefs.current[index]?.scrollIntoView({
         behavior: "smooth",
@@ -72,8 +70,6 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
       });
     }, 0);
   };
-
-  // ... (otras funciones permanecen iguales)
 
   return (
     <div className="h-full bg-card border border-border rounded-lg overflow-hidden flex flex-col">
@@ -84,11 +80,11 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
         total={lessons.length}
       />
 
-      <h3 className="text-sm font-medium text-muted-foreground sticky top-0 bg-card p-4 pb-2 z-10">
+      <h3 className="text-sm font-medium text-muted-foreground sticky top-0 bg-card p-4 pb-2">
         Lessons
       </h3>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-96">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[calc(100vh-17rem)]">
         {lessons.map((lesson, index) => (
           <LessonAccordion
             key={lesson.id}

@@ -36,7 +36,7 @@ const Index = () => {
 
         <div className="snap-start">
           <MainInterface mode={mode} onCommandSuggest={handleCommandSuggest} />
-          <FooterSection mode={mode} />
+          {/* <FooterSection mode={mode} /> */}
         </div>
       </div>
     </div>
