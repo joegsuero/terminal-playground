@@ -11,7 +11,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ mode }) => {
   const data = modeSpecificData[mode];
 
   return (
-    <section className="py-8 px-4">
+    <section className="py-8 pb-0 px-4">
       <div className="container mx-auto text-center max-w-6xl">
         <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
           {data.heroTitle}

@@ -35,7 +35,7 @@ export const MainInterface: React.FC<MainInterfaceProps> = ({
   };
 
   return (
-    <section className="px-4 pb-8">
+    <section className="px-4 pb-8 pt-2">
       <div className="container mx-auto">
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-1">{renderTutorial()}</div>

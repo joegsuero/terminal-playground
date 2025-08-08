@@ -28,9 +28,17 @@ const Index = () => {
       }`}
     >
       <Header mode={mode} onModeChange={handleModeChange} />
-      <HeroSection mode={mode} />
-      <MainInterface mode={mode} onCommandSuggest={handleCommandSuggest} />
-      <FooterSection mode={mode} />
+
+      {/* Contenedor principal con scroll snapping */}
+      <div className="h-[calc(100vh-6rem)] overflow-y-auto snap-y snap-mandatory">
+        <div className="h-full snap-start">
+          <HeroSection mode={mode} />
+        </div>
+        <div className="h-full snap-start">
+          <MainInterface mode={mode} onCommandSuggest={handleCommandSuggest} />
+          <FooterSection mode={mode} />
+        </div>
+      </div>
     </div>
   );
 };

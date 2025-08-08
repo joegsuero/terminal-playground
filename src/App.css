@@ -40,3 +40,19 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Habilita scroll snapping en el contenedor */
+@supports (scroll-snap-type: y mandatory) {
+  .snap-y {
+    scroll-snap-type: y mandatory;
+  }
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* Asegura que cada sección ocupe toda la altura visible */
+.h-\[calc\(100vh-4rem\)\] {
+  height: calc(100vh - 4rem); /* Resta la altura del header */
+}

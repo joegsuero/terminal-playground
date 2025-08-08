@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-4 fix">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Icon className="w-8 h-8 text-primary" />
