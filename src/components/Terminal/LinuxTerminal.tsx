@@ -112,7 +112,6 @@ export const LinuxTerminal: React.FC = () => {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onClick={handleInputClick}
-              multiple
               onSelect={handleInputSelect}
               className="w-full bg-transparent text-terminal-text outline-none border-none caret-transparent"
               autoComplete="off"
