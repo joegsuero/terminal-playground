@@ -63,13 +63,3 @@ html {
 .h-\[calc\(100vh-6rem\)\] > div:last-child {
   min-height: calc(100vh - 6rem);
 }
-
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}

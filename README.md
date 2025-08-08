@@ -1,73 +1,87 @@
-# Welcome to your Lovable project
+# Terminal Playground 🚀
 
-## Project info
+[![GitHub stars](https://img.shields.io/github/stars/joegsuero/terminal-playground?style=social)](https://github.com/joegsuero/terminal-playground/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-**URL**: https://lovable.dev/projects/56ee81b4-9d61-43c2-9fac-3dcacce23139
+An interactive browser-based terminal playground designed to help beginners learn Linux and Docker commands without complex setup!
 
-## How can I edit this code?
+## 🌟 Features
 
-There are several ways of editing your application.
+- **Zero-configuration learning** - Start practicing immediately in your browser
+- **Interactive Linux terminal** - Learn essential Linux commands with instant feedback
+- **Docker playground** - Experiment with Docker commands without local installation
+- **Structured lessons** - Guided learning path from beginner to advanced concepts
+- **Safe environment** - Experiment freely without breaking your system
+- **Real-time output** - See command results instantly
 
-**Use Lovable**
+## 🚀 Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/56ee81b4-9d61-43c2-9fac-3dcacce23139) and start prompting.
+1. **Access the playground**: Visit [live demo link] (if deployed)
+2. **Choose your terminal**: Select Linux or Docker mode
+3. **Follow lessons**: Complete interactive tutorials
+4. **Experiment**: Try commands in the terminal
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ How It Works
 
-**Use your preferred IDE**
+This application provides:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- A fully interactive terminal emulator in your browser
+- Simulated Linux environment with common commands
+- Docker command interpreter with realistic outputs
+- Progressive lessons with explanations and examples
+- "Try This Command" functionality for guided learning
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📚 Learning Path
 
-Follow these steps:
+### Linux Basics
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- File system navigation
+- File operations
+- Permissions
+- Process management
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Docker Fundamentals
 
-# Step 3: Install the necessary dependencies.
-npm i
+- Container lifecycle
+- Image management
+- Networking
+- Volume operations
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## 💻 Technologies Used
 
-**Edit a file directly in GitHub**
+- React + TypeScript
+- Zustand (state management)
+- Lucide React (icons)
+- Tailwind CSS (styling)
+- Vite (build tool)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🤝 Contributing
 
-**Use GitHub Codespaces**
+Contributions are welcome! Please open an issue or submit a PR for any:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Bug fixes
+- Additional commands
+- Improved lessons
+- UX enhancements
 
-## What technologies are used for this project?
+## ⭐ Support the Project
 
-This project is built with:
+If you find this project helpful:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. **Give it a star** ⭐ - it helps others discover the tool
+2. **Share with friends** 👥 - spread the learning
+3. **Provide feedback** 💬 - open issues with suggestions
 
-## How can I deploy this project?
+Your support motivates further development!
 
-Simply open [Lovable](https://lovable.dev/projects/56ee81b4-9d61-43c2-9fac-3dcacce23139) and click on Share -> Publish.
+## 📬 Contact
 
-## Can I connect a custom domain to my Lovable project?
+Connect with me on [LinkedIn](https://www.linkedin.com/in/joegsuero) for:
 
-Yes, you can!
+- Questions about the project
+- Professional networking
+- Collaboration opportunities
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+MIT © [José Daniel García Suero](https://github.com/joegsuero)
