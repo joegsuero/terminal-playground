@@ -16,6 +16,7 @@ export const LinuxTutorial: React.FC<TutorialProps> = ({
       onCommandSuggest={onCommandSuggest}
       title="Linux Tutorial"
       icon={<BookOpen className="w-5 h-5 text-primary" />}
+      theme="linux"
     />
   );
 };

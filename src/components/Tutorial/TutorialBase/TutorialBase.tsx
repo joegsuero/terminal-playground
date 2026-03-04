@@ -1,13 +1,15 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ProgressHeader } from "./ProgressHeader";
 import { LessonAccordion } from "./LessonAccordion";
 import { Lesson } from "@/types/types";
+import { useTerminalStore } from "@/store/terminalStore";
 
 interface TutorialBaseProps {
   lessons: Lesson[];
   onCommandSuggest: (command: string) => void;
   title: string;
   icon: React.ReactNode;
+  theme: "linux" | "docker";
 }
 
 export const TutorialBase: React.FC<TutorialBaseProps> = ({
@@ -15,13 +17,21 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
   onCommandSuggest,
   title,
   icon,
+  theme,
 }) => {
   const [currentLesson, setCurrentLesson] = useState(0);
-  const [completedLessons, setCompletedLessons] = useState<Set<string>>(
-    new Set()
-  );
+  const { 
+    linuxProgress, 
+    dockerProgress, 
+    completeLinuxLesson, 
+    completeDockerLesson 
+  } = useTerminalStore();
+  
+  const completedLessonIds = theme === "linux" ? linuxProgress : dockerProgress;
+  const completeLesson = theme === "linux" ? completeLinuxLesson : completeDockerLesson;
+
   const [currentCommandIndex, setCurrentCommandIndex] = useState(0);
-  const [expandedLesson, setExpandedLesson] = useState<number | null>(null);
+  const [expandedLesson, setExpandedLesson] = useState<number | null>(0);
 
   const lessonRefs = useRef<(HTMLDivElement | null)[]>([]);
   const setLessonRef = useCallback(
@@ -36,7 +46,7 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
     if (currentCommandIndex < lesson.commands.length - 1) {
       setCurrentCommandIndex((prev) => prev + 1);
     } else {
-      setCompletedLessons((prev) => new Set([...prev, lesson.id]));
+      completeLesson(lesson.id);
       if (currentLesson < lessons.length - 1) {
         const nextLesson = currentLesson + 1;
         setCurrentLesson(nextLesson);
@@ -76,7 +86,7 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
       <ProgressHeader
         title={title}
         icon={icon}
-        completed={completedLessons.size}
+        completed={completedLessonIds.length}
         total={lessons.length}
       />
 
@@ -92,7 +102,7 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
             lesson={lesson}
             isExpanded={expandedLesson === index}
             isCurrent={currentLesson === index}
-            isCompleted={completedLessons.has(lesson.id)}
+            isCompleted={completedLessonIds.includes(lesson.id)}
             currentCommandIndex={currentCommandIndex}
             onSelect={() => handleLessonSelect(index)}
             onTryCommand={handleTryCommand}
@@ -104,3 +114,4 @@ export const TutorialBase: React.FC<TutorialBaseProps> = ({
     </div>
   );
 };
+

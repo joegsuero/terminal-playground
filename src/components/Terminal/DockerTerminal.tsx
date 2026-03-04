@@ -1,158 +1,124 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TerminalBase } from "./TerminalBase";
-import { Container, Maximize2, Minimize2 } from "lucide-react";
+import { Container } from "lucide-react";
 import { useDockerCommands } from "@/commands/useDockerCommands";
 import { useTerminalStore } from "@/store/terminalStore";
+import { commands } from "../../commands/docker";
 
 export const DockerTerminal: React.FC = () => {
-  const { executeDockerCommand } = useDockerCommands();
-  const [currentCommand, setCurrentCommand] = useState("");
+  const { executeDockerCommand, history } = useDockerCommands();
+  const [input, setInput] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
-  const [output, setOutput] = useState<
-    Array<{
-      type: "command" | "output" | "error";
-      content: string;
-      timestamp: number;
-    }>
-  >([
-    {
-      type: "output",
-      content:
-        'Welcome to Docker Terminal! Type "docker --help" to get started.\nLearn containerization step by step with interactive commands.',
-      timestamp: Date.now(),
-    },
-  ]);
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isTyping, setIsTyping] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { commandToExecute, clearCommand } = useTerminalStore();
 
+  const [tabMatches, setTabMatches] = useState<string[]>([]);
+  const [tabIndex, setTabIndex] = useState(-1);
+  const [lastTabPrefix, setLastTabPrefix] = useState("");
+
   useEffect(() => {
-    inputRef.current?.focus();
+    textareaRef.current?.focus();
   }, []);
 
   useEffect(() => {
     if (commandToExecute) {
-      setCurrentCommand(commandToExecute);
+      setInput(commandToExecute);
       setCursorPosition(commandToExecute.length);
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
       clearCommand();
     }
   }, [commandToExecute, clearCommand]);
 
   const handleCursorChange = () => {
-    if (inputRef.current) {
-      setCursorPosition(inputRef.current.selectionStart || 0);
+    if (textareaRef.current) {
+      setCursorPosition(textareaRef.current.selectionStart || 0);
     }
   };
 
-  const handleCommand = (cmd: string) => {
-    const trimmedCmd = cmd.trim();
-    if (!trimmedCmd) return;
-
-    setHistory((prev) => [...prev, trimmedCmd]);
-    setHistoryIndex(-1);
-
-    setOutput((prev) => [
-      ...prev,
-      {
-        type: "command",
-        content: `user@docker-host:~$ ${trimmedCmd}`,
-        timestamp: Date.now(),
-      },
-    ]);
-
-    const result = executeDockerCommand(trimmedCmd);
-
-    setOutput((prev) => [
-      ...prev,
-      {
-        type: result.includes("error") ? "error" : "output",
-        content: result,
-        timestamp: Date.now(),
-      },
-    ]);
-
-    setCurrentCommand("");
-    setCursorPosition(0);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentCommand.trim() === "clear") {
-      handleClear();
-      setCurrentCommand("");
+  const handleSubmit = () => {
+    if (input.trim()) {
+      setIsTyping(true);
+      executeDockerCommand(input);
+      setInput("");
       setCursorPosition(0);
-    } else {
-      handleCommand(currentCommand);
+      setTimeout(() => setIsTyping(false), 100);
+      // Reset tab completion state after submission
+      setTabMatches([]);
+      setTabIndex(-1);
+      setLastTabPrefix("");
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    setCursorPosition(e.target.selectionStart || 0);
+    // Reset tab completion state on input change
+    setTabMatches([]);
+    setTabIndex(-1);
+    setLastTabPrefix("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowUp") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (history.length > 0) {
-        const newIndex =
-          historyIndex === -1
-            ? history.length - 1
-            : Math.max(0, historyIndex - 1);
-        setHistoryIndex(newIndex);
-        const command = history[newIndex];
-        setCurrentCommand(command);
-        setTimeout(() => {
-          setCursorPosition(command.length);
-          inputRef.current?.setSelectionRange(command.length, command.length);
-        }, 0);
-      }
-    } else if (e.key === "ArrowDown") {
+      handleSubmit();
+    } else if (e.key === "Tab") {
       e.preventDefault();
-      if (historyIndex !== -1) {
-        const newIndex = historyIndex + 1;
-        if (newIndex < history.length) {
-          setHistoryIndex(newIndex);
-          const command = history[newIndex];
-          setCurrentCommand(command);
-          setTimeout(() => {
-            setCursorPosition(command.length);
-            inputRef.current?.setSelectionRange(command.length, command.length);
-          }, 0);
-        } else {
-          setHistoryIndex(-1);
-          setCurrentCommand("");
-          setCursorPosition(0);
-        }
+      
+      const textBeforeCursor = input.slice(0, cursorPosition);
+      const match = textBeforeCursor.match(/(\S+)$/);
+      
+      if (!match) return;
+      
+      const currentWord = match[0];
+      const prefix = textBeforeCursor.slice(0, textBeforeCursor.length - currentWord.length);
+      
+      // If we are already cycling through matches for the same word
+      if (currentWord === lastTabPrefix && tabMatches.length > 0) {
+        const nextIndex = (tabIndex + 1) % tabMatches.length;
+        const completedName = tabMatches[nextIndex];
+        const newInput = prefix + completedName + input.slice(cursorPosition);
+        setInput(newInput);
+        setCursorPosition(prefix.length + completedName.length);
+        setTabIndex(nextIndex);
+        setLastTabPrefix(completedName);
+        return;
       }
+
+      // In Docker terminal, we match against available commands
+      const availableCommands = Object.keys(commands);
+      const matches = availableCommands
+        .filter((cmd) => cmd.toLowerCase().startsWith(currentWord.toLowerCase()))
+        .sort((a, b) => a.localeCompare(b));
+
+      if (matches.length > 0) {
+        const completedName = matches[0];
+        const newInput = prefix + completedName + input.slice(cursorPosition);
+        setInput(newInput);
+        setCursorPosition(prefix.length + completedName.length);
+        
+        setTabMatches(matches);
+        setTabIndex(0);
+        setLastTabPrefix(completedName);
+      }
+    } else if (e.ctrlKey && e.key === "c") {
+      e.preventDefault();
+      setInput("");
+      setCursorPosition(0);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentCommand(e.target.value);
-    // No actualizamos cursorPosition aquí para evitar conflictos con selección
-  };
-
-  const handleInputClick = () => {
-    handleCursorChange();
-  };
-
-  const handleInputSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
-    const target = e.target as HTMLInputElement;
-    setCursorPosition(target.selectionStart || 0);
-  };
-
-  const handleClear = () => {
-    setOutput([
-      {
-        type: "output",
-        content:
-          'Welcome to Docker Terminal! Type "docker --help" to get started.',
-        timestamp: Date.now(),
-      },
-    ]);
-  };
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
 
   const handleTerminalClick = () => {
-    inputRef.current?.focus();
+    textareaRef.current?.focus();
   };
 
   return (
@@ -160,58 +126,59 @@ export const DockerTerminal: React.FC = () => {
       title="Docker Terminal"
       icon={<Container className="w-4 h-4" />}
       onTerminalClick={handleTerminalClick}
-      onClear={handleClear}
       onMaximize={() => setIsMaximized(!isMaximized)}
       isMaximized={isMaximized}
       theme="docker"
     >
-      {output.map((item, index) => (
-        <div key={`${index}-${item.timestamp}`} className="mb-1">
+      {history.map((line, index) => (
+        <div key={`${line.id}-${index}`} className="mb-1">
           <pre
-            className={`whitespace-pre-wrap font-mono ${
-              item.type === "command"
+            className={`whitespace-pre-wrap break-all font-mono ${
+              line.type === "command"
                 ? "text-blue-500 font-bold"
-                : item.type === "error"
+                : line.type === "error"
                 ? "text-red-400"
                 : "text-terminal-text"
             }`}
           >
-            {item.content}
+            {line.content}
           </pre>
         </div>
       ))}
 
-      <div className="flex items-center font-mono">
-        <span className="text-blue-500 font-bold mr-2">
+      <div className="flex font-mono relative items-start">
+        <span className="text-blue-500 font-bold mr-2 whitespace-nowrap leading-6">
           user@docker-host:~$
         </span>
-        <div className="relative flex-1">
-          <form onSubmit={handleSubmit} className="w-full">
-            <input
-              ref={inputRef}
-              type="text"
-              value={currentCommand}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              onClick={handleInputClick}
-              onSelect={handleInputSelect}
-              className="w-full bg-transparent text-terminal-text outline-none border-none caret-transparent"
-              autoComplete="off"
-              spellCheck="false"
-              placeholder=""
-            />
-          </form>
-          <span
-            className="absolute top-0 text-terminal-cursor terminal-cursor"
+        <div className="relative flex-1 leading-6">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onClick={handleCursorChange}
+            onSelect={handleCursorChange}
+            className="w-full bg-transparent text-terminal-text outline-none border-none resize-none p-0 overflow-hidden leading-6 caret-transparent break-all whitespace-pre-wrap"
+            autoComplete="off"
+            spellCheck="false"
+            rows={1}
+            style={{ height: "auto", minHeight: "1.5rem" }}
+          />
+          <div
+            className="absolute top-0 w-[1ch] bg-terminal-cursor terminal-cursor pointer-events-none"
             style={{
               left: `${cursorPosition}ch`,
+              height: "1.4rem",
+              marginTop: "0.2rem",
               animation: "blink 1s step-end infinite",
+              display: input.length > 50 ? 'none' : 'block'
             }}
-          >
-            █
-          </span>
+          />
         </div>
       </div>
     </TerminalBase>
   );
 };
+
+
+

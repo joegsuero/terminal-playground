@@ -1,22 +1,26 @@
 import { useFileSystem } from "@/hooks/useLinuxFileSystem";
 import { TerminalLine } from "@/types/types";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { commands } from "./linux";
+import { useTerminalStore } from "@/store/terminalStore";
 
 export const useLinuxCommands = () => {
-  const [history, setHistory] = useState<TerminalLine[]>([
-    {
-      id: "1",
-      type: "output",
-      content:
-        'Welcome to Linux Terminal Playground!\nType "help" to see available commands or start with the tutorial.',
-      timestamp: new Date(),
-    },
-  ]);
+  const { linuxHistory, addLinuxHistory, setLinuxHistory } = useTerminalStore();
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   const fs = useFileSystem();
+
+  const getWelcomeMessage = (): TerminalLine => ({
+    id: "welcome-linux",
+    type: "output",
+    content:
+      'Welcome to Linux Terminal Playground!\nType "help" to see available commands or start with the tutorial.',
+    timestamp: new Date(),
+  });
+
+  const history =
+    linuxHistory.length > 0 ? linuxHistory : [getWelcomeMessage()];
 
   const executeCommand = useCallback(
     (input: string) => {
@@ -30,7 +34,7 @@ export const useLinuxCommands = () => {
         timestamp: new Date(),
       };
 
-      setHistory((prev) => [...prev, commandLine]);
+      addLinuxHistory(commandLine);
       setCommandHistory((prev) => [...prev, trimmedInput]);
       setHistoryIndex(-1);
 
@@ -46,21 +50,21 @@ export const useLinuxCommands = () => {
           content: `${commandName}: command not found`,
           timestamp: new Date(),
         };
-        setHistory((prev) => [...prev, errorLine]);
+        addLinuxHistory(errorLine);
         return;
       }
 
       if (commandName === "clear") {
-        setHistory([]);
+        setLinuxHistory([]);
         return;
       }
 
       const output = command.execute(args, fs, commandHistory);
       if (output.length > 0) {
-        setHistory((prev) => [...prev, ...output]);
+        output.forEach((line) => addLinuxHistory(line));
       }
     },
-    [fs, commandHistory]
+    [fs, commandHistory, addLinuxHistory, setLinuxHistory]
   );
 
   const getPrompt = useCallback(() => {
@@ -69,16 +73,14 @@ export const useLinuxCommands = () => {
 
   const navigateHistory = useCallback(
     (direction: "up" | "down") => {
-      if (direction === "up" && historyIndex < commandHistory.length - 1) {
-        const newIndex = historyIndex + 1;
+      if (direction === "up" && commandHistory.length > 0) {
+        const newIndex = Math.min(historyIndex + 1, commandHistory.length - 1);
         setHistoryIndex(newIndex);
         return commandHistory[commandHistory.length - 1 - newIndex];
-      } else if (direction === "down" && historyIndex > -1) {
-        const newIndex = historyIndex - 1;
+      } else if (direction === "down") {
+        const newIndex = Math.max(historyIndex - 1, -1);
         setHistoryIndex(newIndex);
-        return newIndex === -1
-          ? ""
-          : commandHistory[commandHistory.length - 1 - newIndex];
+        return newIndex === -1 ? "" : commandHistory[commandHistory.length - 1 - newIndex];
       }
       return null;
     },
@@ -91,5 +93,8 @@ export const useLinuxCommands = () => {
     getPrompt,
     navigateHistory,
     currentPath: fs.currentPath,
+    getDirectory: fs.getDirectory,
   };
 };
+
+

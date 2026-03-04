@@ -17,6 +17,7 @@ export const DockerTutorial: React.FC<TutorialProps> = ({
         onCommandSuggest={onCommandSuggest}
         title="Docker Training"
         icon={<Container className="w-5 h-5 text-primary" />}
+        theme="docker"
       />
     </div>
   );

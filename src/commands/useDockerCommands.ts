@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { commands, DockerCommandFunction } from "./docker";
-import { DockerContainer, DockerImage } from "@/types/types";
+import { DockerContainer, DockerImage, TerminalLine } from "@/types/types";
+import { useTerminalStore } from "@/store/terminalStore";
 
 export const useDockerCommands = () => {
+  const { dockerHistory, addDockerHistory, setDockerHistory } = useTerminalStore();
+  
   const [containers, setContainers] = useState<DockerContainer[]>([
     {
       id: "c1a2b3c4d5e6",
@@ -46,49 +49,63 @@ export const useDockerCommands = () => {
     },
   ]);
 
-  const executeDockerCommand = (command: string): string => {
-    const args = command.trim().split(/\s+/);
-    const subcommand = args[1];
+  const getWelcomeMessage = (): TerminalLine => ({
+    id: "welcome-docker",
+    type: "output",
+    content: "Welcome to Docker Terminal Playground!\nType 'docker --help' to see available commands.",
+    timestamp: new Date(),
+  });
 
-    if (
-      command.trim() === "docker" ||
-      command.trim() === "docker --help" ||
-      command.trim() === "docker --version"
-    ) {
+  const history = dockerHistory.length > 0 ? dockerHistory : [getWelcomeMessage()];
+
+  const executeDockerCommand = useCallback((input: string) => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return;
+
+    const commandLine: TerminalLine = {
+      id: Date.now().toString(),
+      type: "command",
+      content: `user@docker-playground:~$ ${trimmedInput}`,
+      timestamp: new Date(),
+    };
+
+    addDockerHistory(commandLine);
+
+    const args = trimmedInput.split(/\s+/);
+    const isDocker = args[0] === "docker";
+    const subcommand = isDocker ? args[1] : args[0];
+
+    let result = "";
+
+    if (isDocker && (!subcommand || subcommand === "--help" || subcommand === "--version")) {
       const commandHandler = commands["docker"];
       if (commandHandler) {
-        return commandHandler(
-          args,
-          setContainers,
-          setImages,
-          containers,
-          images
-        );
+        result = commandHandler(args, setContainers, setImages, containers, images);
+      }
+    } else if (subcommand === "clear") {
+      setDockerHistory([]);
+      return;
+    } else {
+      const commandHandler = commands[subcommand] as DockerCommandFunction;
+      if (commandHandler) {
+        result = commandHandler(args, setContainers, setImages, containers, images);
+      } else {
+        result = isDocker 
+          ? `docker: '${subcommand}' is not a docker command.\nSee 'docker --help'`
+          : `${subcommand}: command not found`;
       }
     }
 
-    const commandHandler = commands[subcommand] as DockerCommandFunction;
 
-    if (commandHandler) {
-      return commandHandler(args, setContainers, setImages, containers, images);
+    if (result) {
+      addDockerHistory({
+        id: (Date.now() + 1).toString(),
+        type: "output",
+        content: result,
+        timestamp: new Date(),
+      });
     }
+  }, [containers, images, addDockerHistory, setDockerHistory]);
 
-    if (commands[args[0]]) {
-      const managementCommandHandler = commands[args[0]];
-      if (managementCommandHandler) {
-        return managementCommandHandler(
-          args,
-          setContainers,
-          setImages,
-          containers,
-          images
-        );
-      }
-    }
-
-    return `docker: '${subcommand}' is not a docker command.
-See 'docker --help'`;
-  };
-
-  return { executeDockerCommand, containers, images };
+  return { executeDockerCommand, containers, images, history };
 };

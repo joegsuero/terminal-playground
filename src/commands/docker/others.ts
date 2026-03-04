@@ -113,7 +113,17 @@ local     postgres_data`;
       return `Error: '${volumeSubcommand}' is not a valid volume command. See 'docker volume --help'`;
     }
 
-    default:
-      return `docker: '${subcommand}' is not a docker command. See 'docker --help'`;
+    case "ls": {
+      return `docker-compose.yml  data/  logs/  nginx.conf`;
+    }
+ 
+    default: {
+      const isDockerCommand = command === "docker";
+      return isDockerCommand 
+        ? `docker: '${subcommand}' is not a docker command. See 'docker --help'`
+        : `${command}: command not found`;
+    }
   }
 };
+
+

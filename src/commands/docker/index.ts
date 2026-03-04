@@ -36,4 +36,6 @@ export const commands: Record<string, DockerCommandFunction> = {
   system: handleOtherCommands,
   network: handleOtherCommands,
   volume: handleOtherCommands,
+  ls: handleOtherCommands,
 };
+
