@@ -34,6 +34,15 @@ import { tar } from "./tar";
 import { sort } from "./sort";
 import { ping } from "./ping";
 import { traceroute } from "./traceroute";
+import { du } from "./du";
+import { env } from "./env";
+import { setExport } from "./export";
+import { kill } from "./kill";
+import { sed } from "./sed";
+import { uniq } from "./uniq";
+import { cut } from "./cut";
+import { tr } from "./tr";
+import { jobList } from "./jobs";
 import { Command } from "@/types/types";
 
 export const commands: Record<string, Command> = {
@@ -73,4 +82,13 @@ export const commands: Record<string, Command> = {
   sort: sort,
   ping: ping,
   traceroute: traceroute,
+  du: du,
+  env: env,
+  export: setExport,
+  kill: kill,
+  sed: sed,
+  uniq: uniq,
+  cut: cut,
+  tr: tr,
+  jobs: jobList,
 };

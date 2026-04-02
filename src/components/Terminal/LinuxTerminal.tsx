@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { TerminalBase } from "./TerminalBase";
 import { Terminal } from "lucide-react";
 import { useLinuxCommands } from "@/commands/useLinuxCommands";
 import { useTerminalStore } from "@/store/terminalStore";
+import { commands } from "@/commands/linux";
 
 export const LinuxTerminal: React.FC = () => {
   const [input, setInput] = useState("");
@@ -12,6 +13,9 @@ export const LinuxTerminal: React.FC = () => {
     useLinuxCommands();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const terminalContentRef = useRef<HTMLDivElement>(null);
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
   const { commandToExecute, clearCommand } = useTerminalStore();
 
   useEffect(() => {
@@ -27,11 +31,38 @@ export const LinuxTerminal: React.FC = () => {
     }
   }, [commandToExecute, clearCommand]);
 
+  useEffect(() => {
+    if (terminalContentRef.current) {
+      terminalContentRef.current.scrollTop = terminalContentRef.current.scrollHeight;
+    }
+  }, [history]);
+
   const handleCursorChange = () => {
     if (textareaRef.current) {
       setCursorPosition(textareaRef.current.selectionStart || 0);
     }
   };
+
+  const updateCursorPosition = useCallback(() => {
+    if (!ghostRef.current || !cursorRef.current || !textareaRef.current) return;
+
+    const ghost = ghostRef.current;
+    const textarea = textareaRef.current;
+
+    ghost.style.width = `${textarea.offsetWidth}px`;
+
+    const span = ghost.querySelector('#cursor-measure') as HTMLSpanElement;
+    if (span) {
+      const spanRect = span.getBoundingClientRect();
+      const ghostRect = ghost.getBoundingClientRect();
+      cursorRef.current.style.left = `${spanRect.left - ghostRect.left}px`;
+      cursorRef.current.style.top = `${spanRect.top - ghostRect.top}px`;
+    }
+  }, []);
+
+  useEffect(() => {
+    updateCursorPosition();
+  }, [input, cursorPosition, updateCursorPosition]);
 
   const handleSubmit = () => {
     if (input.trim()) {
@@ -82,6 +113,9 @@ export const LinuxTerminal: React.FC = () => {
       e.preventDefault();
       
       const textBeforeCursor = input.slice(0, cursorPosition);
+      const tokens = textBeforeCursor.trim().split(/\s+/);
+      const isFirstToken = tokens.length <= 1 && !textBeforeCursor.endsWith(' ');
+      
       const match = textBeforeCursor.match(/(\S+)$/);
       
       if (!match) return;
@@ -101,12 +135,23 @@ export const LinuxTerminal: React.FC = () => {
         return;
       }
 
-      // First time pressing Tab or new word
-      const dirContents = getDirectory(currentPath);
-      const matches = dirContents
-        .filter((item) => item.name.toLowerCase().startsWith(currentWord.toLowerCase()))
-        .map(item => item.name)
-        .sort((a, b) => a.localeCompare(b));
+      // First time pressing Tab or new word - check if first token or args
+      let matches: string[];
+
+      if (isFirstToken) {
+        // Autocomplete commands
+        const availableCommands = Object.keys(commands);
+        matches = availableCommands
+          .filter((cmd) => cmd.toLowerCase().startsWith(currentWord.toLowerCase()))
+          .sort((a, b) => a.localeCompare(b));
+      } else {
+        // Autocomplete files/directories
+        const dirContents = getDirectory(currentPath);
+        matches = dirContents
+          .filter((item) => item.name.toLowerCase().startsWith(currentWord.toLowerCase()))
+          .map(item => item.name)
+          .sort((a, b) => a.localeCompare(b));
+      }
 
       if (matches.length > 0) {
         const completedName = matches[0];
@@ -143,20 +188,38 @@ export const LinuxTerminal: React.FC = () => {
       icon={<Terminal className="w-4 h-4" />}
       onTerminalClick={handleTerminalClick}
       theme="linux"
+      contentRef={terminalContentRef}
     >
       {history.map((line, index) => (
         <div key={`${line.id}-${index}`} className="mb-1">
-          <pre
-            className={`whitespace-pre-wrap break-all font-mono ${
-              line.type === "command"
-                ? "text-terminal-prompt font-bold"
-                : line.type === "error"
-                ? "text-red-500"
-                : "text-terminal-text"
-            }`}
-          >
-            {line.content}
-          </pre>
+          {line.segments ? (
+            <pre className="whitespace-pre-wrap break-all font-mono">
+              {line.segments.map((seg, i) => (
+                <span
+                  key={i}
+                  className={
+                    seg.color === 'dir' ? 'text-blue-400 font-medium' :
+                    seg.color === 'exec' ? 'text-green-400' :
+                    'text-terminal-text'
+                  }
+                >
+                  {seg.text}
+                </span>
+              ))}
+            </pre>
+          ) : (
+            <pre
+              className={`whitespace-pre-wrap break-all font-mono ${
+                line.type === "command"
+                  ? "text-terminal-prompt font-bold"
+                  : line.type === "error"
+                  ? "text-red-500"
+                  : "text-terminal-text"
+              }`}
+            >
+              {line.content}
+            </pre>
+          )}
         </div>
       ))}
 
@@ -172,26 +235,43 @@ export const LinuxTerminal: React.FC = () => {
             onKeyDown={handleKeyDown}
             onClick={handleCursorChange}
             onSelect={handleCursorChange}
-            className="w-full bg-transparent text-terminal-text outline-none border-none resize-none p-0 overflow-hidden leading-6 caret-transparent break-all whitespace-pre-wrap"
+            className="w-full bg-transparent text-transparent outline-none border-none resize-none p-0 overflow-hidden leading-6 caret-transparent break-all whitespace-pre-wrap"
             autoComplete="off"
             spellCheck="false"
             rows={1}
             style={{ height: "auto", minHeight: "1.5rem" }}
           />
           <div
+            aria-hidden="true"
+            className="absolute inset-0 font-mono text-sm pointer-events-none whitespace-pre-wrap break-all leading-6 text-terminal-text"
+          >
+            {input.slice(0, cursorPosition)}
+            <span id="cursor-measure">|</span>
+            {input.slice(cursorPosition)}
+          </div>
+          <div
+            ref={cursorRef}
             className="absolute top-0 w-[1ch] bg-terminal-cursor terminal-cursor pointer-events-none"
             style={{
-              // Note: This coordinate calculation still only works perfectly for the first line.
-              // To support full 2D cursor for wrapping, we'd need a ghost/mirror div.
-              // I will prioritize fixing the horizontal scroll first as requested.
-              left: `${cursorPosition % 80}ch`, // Rough approximation if terminal width is 80
-              top: `${Math.floor(cursorPosition / 80) * 1.5}rem`,
               height: "1.2rem",
               marginTop: "0.2rem",
               animation: "blink 1s step-end infinite",
-              display: input.includes('\n') || input.length > 50 ? 'none' : 'block' // Hide cursor if it wraps to avoid misplacement
             }}
           />
+          <div
+            ref={ghostRef}
+            className="absolute opacity-0 pointer-events-none whitespace-pre-wrap break-all font-mono text-sm"
+            style={{ 
+              width: textareaRef.current?.offsetWidth 
+                ? `${textareaRef.current.offsetWidth}px` 
+                : '100%',
+              lineHeight: '1.5rem'
+            }}
+          >
+            {input.slice(0, cursorPosition)}
+            <span id="cursor-measure">|</span>
+            {input.slice(cursorPosition)}
+          </div>
         </div>
       </div>
     </TerminalBase>

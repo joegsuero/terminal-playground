@@ -10,6 +10,7 @@ interface TerminalBaseProps {
   onMaximize?: () => void;
   isMaximized?: boolean;
   theme?: "linux" | "docker";
+  contentRef?: React.RefObject<HTMLDivElement>;
 }
 
 export const TerminalBase: React.FC<TerminalBaseProps> = ({
@@ -21,8 +22,10 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
   onMaximize,
   isMaximized = false,
   theme = "linux",
+  contentRef,
 }) => {
-  const terminalRef = useRef<HTMLDivElement>(null);
+  const internalRef = useRef<HTMLDivElement>(null);
+  const resolvedRef = contentRef || internalRef;
 
   const themeClasses = {
     linux: {
@@ -85,7 +88,7 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
 
       {/* Terminal Content */}
       <div
-        ref={terminalRef}
+        ref={resolvedRef}
         className="flex-1 p-4 font-mono text-sm overflow-y-auto terminal-scroll cursor-text"
         onClick={onTerminalClick}
       >

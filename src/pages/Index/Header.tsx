@@ -3,7 +3,8 @@ import { ModeSelector } from "@/components/ModeSelector";
 import { Badge } from "@/components/ui/badge";
 import { modeSpecificData } from "./features";
 import { TrainingMode } from "@/types/types";
-import { Github } from "lucide-react";
+import { Github, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface HeaderProps {
   mode: TrainingMode;
@@ -13,6 +14,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
   const data = modeSpecificData[mode];
   const Icon = data.icon;
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
@@ -31,6 +33,17 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
           <div className="flex flex-col items-center w-full sm:w-auto">
             <div className="flex items-center gap-4">
               <ModeSelector currentMode={mode} onModeChange={onModeChange} />
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </button>
               <Badge variant="secondary">Beta</Badge>
               <a
                 href="https://github.com/joegsuero/terminal-playground"
