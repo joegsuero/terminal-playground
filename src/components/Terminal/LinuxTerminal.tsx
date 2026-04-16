@@ -5,7 +5,11 @@ import { useLinuxCommands } from "@/commands/useLinuxCommands";
 import { useTerminalStore } from "@/store/terminalStore";
 import { commands } from "@/commands/linux";
 
-export const LinuxTerminal: React.FC = () => {
+interface LinuxTerminalProps {
+  themeMode?: "light" | "dark";
+}
+
+export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark" }) => {
   const [input, setInput] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
@@ -188,6 +192,7 @@ export const LinuxTerminal: React.FC = () => {
       icon={<Terminal className="w-4 h-4" />}
       onTerminalClick={handleTerminalClick}
       theme="linux"
+      themeMode={themeMode}
       contentRef={terminalContentRef}
     >
       {history.map((line, index) => (

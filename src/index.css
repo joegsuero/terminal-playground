@@ -144,6 +144,47 @@ All colors MUST be HSL.
     --terminal-info: 200 80% 45%;
     --terminal-success: 120 70% 35%;
   }
+
+  /* Docker light theme */
+  .docker-theme.light {
+    --background: 0 0% 98%;
+    --foreground: 210 30% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 30% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 30% 10%;
+
+    --primary: 210 70% 45%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 210 30% 10%;
+
+    --muted: 210 20% 94%;
+    --muted-foreground: 210 15% 40%;
+
+    --accent: 200 70% 50%;
+    --accent-foreground: 210 30% 10%;
+
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 210 20% 85%;
+    --input: 210 20% 90%;
+    --ring: 210 70% 45%;
+
+    --terminal-bg: 210 10% 96%;
+    --terminal-text: 210 30% 15%;
+    --terminal-prompt: 210 70% 45%;
+    --terminal-cursor: 210 70% 45%;
+    --terminal-selection: 200 60% 85%;
+    --terminal-error: 0 75% 55%;
+    --terminal-warning: 45 100% 50%;
+    --terminal-info: 200 70% 45%;
+    --terminal-success: 210 70% 45%;
+  }
 }
 
 @layer base {

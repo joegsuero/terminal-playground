@@ -10,6 +10,7 @@ interface TerminalBaseProps {
   onMaximize?: () => void;
   isMaximized?: boolean;
   theme?: "linux" | "docker";
+  themeMode?: "light" | "dark";
   contentRef?: React.RefObject<HTMLDivElement>;
 }
 
@@ -22,10 +23,15 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
   onMaximize,
   isMaximized = false,
   theme = "linux",
+  themeMode = "dark",
   contentRef,
 }) => {
   const internalRef = useRef<HTMLDivElement>(null);
   const resolvedRef = contentRef || internalRef;
+
+  const dockerThemeClass = theme === "docker" 
+    ? `docker-theme ${themeMode === "light" ? "light" : ""}` 
+    : "";
 
   const themeClasses = {
     linux: {
@@ -47,7 +53,7 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
       className={`h-full min-h-96 max-h-[34rem] ${
         themeClasses[theme].bg
       } border border-border rounded-lg flex flex-col overflow-hidden ${
-        theme === "docker" ? "shadow-2xl docker-theme" : ""
+        dockerThemeClass ? `shadow-2xl ${dockerThemeClass}` : ""
       }`}
     >
       {/* Terminal Header */}

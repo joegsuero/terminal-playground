@@ -5,7 +5,11 @@ import { useDockerCommands } from "@/commands/useDockerCommands";
 import { useTerminalStore } from "@/store/terminalStore";
 import { commands } from "../../commands/docker";
 
-export const DockerTerminal: React.FC = () => {
+interface DockerTerminalProps {
+  themeMode?: "light" | "dark";
+}
+
+export const DockerTerminal: React.FC<DockerTerminalProps> = ({ themeMode = "dark" }) => {
   const { executeDockerCommand, history } = useDockerCommands();
   const [input, setInput] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -159,6 +163,7 @@ export const DockerTerminal: React.FC = () => {
       onMaximize={() => setIsMaximized(!isMaximized)}
       isMaximized={isMaximized}
       theme="docker"
+      themeMode={themeMode}
       contentRef={terminalContentRef}
     >
       {history.map((line, index) => (
