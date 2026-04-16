@@ -34,6 +34,11 @@ import { tar } from "./tar";
 import { sort } from "./sort";
 import { ping } from "./ping";
 import { traceroute } from "./traceroute";
+import { vim } from "./vim";
+import { nano } from "./nano";
+import { exportCmd, env, unset } from "./env";
+import { ssh, scp } from "./ssh";
+import { alias, unalias } from "./alias";
 import { Command } from "@/types/types";
 
 export const commands: Record<string, Command> = {
@@ -73,4 +78,13 @@ export const commands: Record<string, Command> = {
   sort: sort,
   ping: ping,
   traceroute: traceroute,
+  vim: vim,
+  nano: nano,
+  export: exportCmd,
+  env: env,
+  unset: unset,
+  ssh: ssh,
+  scp: scp,
+  alias: alias,
+  unalias: unalias,
 };
