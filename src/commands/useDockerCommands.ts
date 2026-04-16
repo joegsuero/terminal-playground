@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { commands, DockerCommandFunction } from "./docker";
 import { DockerContainer, DockerImage, TerminalLine } from "@/types/types";
 import { useTerminalStore } from "@/store/terminalStore";
@@ -49,6 +49,12 @@ export const useDockerCommands = () => {
     },
   ]);
 
+  const containersRef = useRef(containers);
+  const imagesRef = useRef(images);
+
+  useEffect(() => { containersRef.current = containers; }, [containers]);
+  useEffect(() => { imagesRef.current = images; }, [images]);
+
   const getWelcomeMessage = (): TerminalLine => ({
     id: "welcome-docker",
     type: "output",
@@ -80,7 +86,7 @@ export const useDockerCommands = () => {
     if (isDocker && (!subcommand || subcommand === "--help" || subcommand === "--version")) {
       const commandHandler = commands["docker"];
       if (commandHandler) {
-        result = commandHandler(args, setContainers, setImages, containers, images);
+        result = commandHandler(args, setContainers, setImages, containersRef.current, imagesRef.current);
       }
     } else if (subcommand === "clear") {
       setDockerHistory([]);
@@ -88,7 +94,7 @@ export const useDockerCommands = () => {
     } else {
       const commandHandler = commands[subcommand] as DockerCommandFunction;
       if (commandHandler) {
-        result = commandHandler(args, setContainers, setImages, containers, images);
+        result = commandHandler(args, setContainers, setImages, containersRef.current, imagesRef.current);
       } else {
         result = isDocker 
           ? `docker: '${subcommand}' is not a docker command.\nSee 'docker --help'`
@@ -105,7 +111,7 @@ export const useDockerCommands = () => {
         timestamp: new Date(),
       });
     }
-  }, [containers, images, addDockerHistory, setDockerHistory]);
+  }, [addDockerHistory, setDockerHistory]);
 
   return { executeDockerCommand, containers, images, history };
 };

@@ -10,6 +10,8 @@ interface TerminalBaseProps {
   onMaximize?: () => void;
   isMaximized?: boolean;
   theme?: "linux" | "docker";
+  themeMode?: "light" | "dark";
+  contentRef?: React.RefObject<HTMLDivElement>;
 }
 
 export const TerminalBase: React.FC<TerminalBaseProps> = ({
@@ -21,8 +23,15 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
   onMaximize,
   isMaximized = false,
   theme = "linux",
+  themeMode = "dark",
+  contentRef,
 }) => {
-  const terminalRef = useRef<HTMLDivElement>(null);
+  const internalRef = useRef<HTMLDivElement>(null);
+  const resolvedRef = contentRef || internalRef;
+
+  const dockerThemeClass = theme === "docker" 
+    ? `docker-theme ${themeMode === "light" ? "light" : ""}` 
+    : "";
 
   const themeClasses = {
     linux: {
@@ -44,7 +53,7 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
       className={`h-full min-h-96 max-h-[34rem] ${
         themeClasses[theme].bg
       } border border-border rounded-lg flex flex-col overflow-hidden ${
-        theme === "docker" ? "shadow-2xl docker-theme" : ""
+        dockerThemeClass ? `shadow-2xl ${dockerThemeClass}` : ""
       }`}
     >
       {/* Terminal Header */}
@@ -85,7 +94,7 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
 
       {/* Terminal Content */}
       <div
-        ref={terminalRef}
+        ref={resolvedRef}
         className="flex-1 p-4 font-mono text-sm overflow-y-auto terminal-scroll cursor-text"
         onClick={onTerminalClick}
       >

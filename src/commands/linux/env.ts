@@ -1,5 +1,3 @@
-import { Command } from "@/types/types";
-
 export const exportCmd: Command = {
   name: "export",
   description: "Set environment variables",
@@ -17,7 +15,7 @@ export const exportCmd: Command = {
 
     const arg = args.join(" ");
     const parts = arg.split("=");
-    
+
     if (parts.length < 2) {
       return [
         {
@@ -54,14 +52,17 @@ export const env: Command = {
   description: "Print environment variables",
   execute: (_args, fs) => {
     const envVars = fs.envVars || {};
-    const vars = Object.entries(envVars).map(([key, value]) => `${key}=${value}`);
-    
+    const vars = Object.entries(envVars).map(
+      ([key, value]) => `${key}=${value}`,
+    );
+
     if (vars.length === 0) {
       return [
         {
           id: Date.now().toString(),
           type: "output",
-          content: "PATH=/usr/local/bin:/usr/bin:/bin\nHOME=/home/user\nUSER=user",
+          content:
+            "PATH=/usr/local/bin:/usr/bin:/bin\nHOME=/home/user\nUSER=user",
           timestamp: new Date(),
         },
       ];
@@ -116,4 +117,14 @@ export const unset: Command = {
       },
     ];
   },
+};
+import { Command } from "@/types/types";
+
+const envVars: Record<string, string> = {
+  PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+  HOME: "/home/user",
+  USER: "user",
+  SHELL: "/bin/bash",
+  TERM: "xterm-256color",
+  LANG: "en_US.UTF-8",
 };

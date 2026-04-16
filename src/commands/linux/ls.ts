@@ -1,4 +1,4 @@
-import { Command } from "@/types/types";
+import { Command, TerminalSegment } from "@/types/types";
 
 export const ls: Command = {
   name: "ls",
@@ -24,7 +24,7 @@ export const ls: Command = {
       ? [
           {
             name: ".",
-            type: "directory",
+            type: "directory" as const,
             permissions: "drwxr-xr-x",
             owner: "user",
             group: "user",
@@ -33,7 +33,7 @@ export const ls: Command = {
           },
           {
             name: "..",
-            type: "directory",
+            type: "directory" as const,
             permissions: "drwxr-xr-x",
             owner: "user",
             group: "user",
@@ -68,12 +68,23 @@ export const ls: Command = {
         },
       ];
     } else {
-      const content = filteredItems.map((item) => item.name).join("  ");
+      const segments: TerminalSegment[] = filteredItems.map((item) => {
+        let color: TerminalSegment['color'] = 'default';
+        if (item.type === 'directory') color = 'dir';
+        else if (item.permissions.startsWith('-rwx')) color = 'exec';
+        
+        return {
+          text: item.name + '  ',
+          color,
+        };
+      });
+
       return [
         {
           id: Date.now().toString(),
           type: "output",
-          content,
+          content: filteredItems.map((item) => item.name).join("  "),
+          segments,
           timestamp: new Date(),
         },
       ];

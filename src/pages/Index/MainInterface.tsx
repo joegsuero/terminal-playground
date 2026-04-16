@@ -4,6 +4,7 @@ import { DockerTerminal } from "@/components/Terminal/DockerTerminal";
 import { LinuxTutorial } from "@/components/Tutorial/LinuxTutorial";
 import { DockerTutorial } from "@/components/Tutorial/DockerTutorial";
 import { TrainingMode } from "@/types/types";
+import { useTheme } from "next-themes";
 
 interface MainInterfaceProps {
   mode: TrainingMode;
@@ -14,13 +15,16 @@ export const MainInterface: React.FC<MainInterfaceProps> = ({
   mode,
   onCommandSuggest,
 }) => {
+  const { theme } = useTheme();
+  const themeMode = (theme === "light" ? "light" : "dark") as "light" | "dark";
+
   const renderTerminal = () => {
     switch (mode) {
       case "docker":
-        return <DockerTerminal />;
+        return <DockerTerminal themeMode={themeMode} />;
       case "linux":
       default:
-        return <LinuxTerminal />;
+        return <LinuxTerminal themeMode={themeMode} />;
     }
   };
 

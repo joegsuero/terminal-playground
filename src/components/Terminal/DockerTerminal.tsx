@@ -1,17 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { TerminalBase } from "./TerminalBase";
 import { Container } from "lucide-react";
 import { useDockerCommands } from "@/commands/useDockerCommands";
 import { useTerminalStore } from "@/store/terminalStore";
 import { commands } from "../../commands/docker";
 
-export const DockerTerminal: React.FC = () => {
+interface DockerTerminalProps {
+  themeMode?: "light" | "dark";
+}
+
+export const DockerTerminal: React.FC<DockerTerminalProps> = ({ themeMode = "dark" }) => {
   const { executeDockerCommand, history } = useDockerCommands();
   const [input, setInput] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const terminalContentRef = useRef<HTMLDivElement>(null);
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
   const { commandToExecute, clearCommand } = useTerminalStore();
 
   const [tabMatches, setTabMatches] = useState<string[]>([]);
@@ -31,11 +38,38 @@ export const DockerTerminal: React.FC = () => {
     }
   }, [commandToExecute, clearCommand]);
 
+  useEffect(() => {
+    if (terminalContentRef.current) {
+      terminalContentRef.current.scrollTop = terminalContentRef.current.scrollHeight;
+    }
+  }, [history]);
+
   const handleCursorChange = () => {
     if (textareaRef.current) {
       setCursorPosition(textareaRef.current.selectionStart || 0);
     }
   };
+
+  const updateCursorPosition = useCallback(() => {
+    if (!ghostRef.current || !cursorRef.current || !textareaRef.current) return;
+
+    const ghost = ghostRef.current;
+    const textarea = textareaRef.current;
+
+    ghost.style.width = `${textarea.offsetWidth}px`;
+
+    const span = ghost.querySelector('#cursor-measure') as HTMLSpanElement;
+    if (span) {
+      const spanRect = span.getBoundingClientRect();
+      const ghostRect = ghost.getBoundingClientRect();
+      cursorRef.current.style.left = `${spanRect.left - ghostRect.left}px`;
+      cursorRef.current.style.top = `${spanRect.top - ghostRect.top}px`;
+    }
+  }, []);
+
+  useEffect(() => {
+    updateCursorPosition();
+  }, [input, cursorPosition, updateCursorPosition]);
 
   const handleSubmit = () => {
     if (input.trim()) {
@@ -129,6 +163,8 @@ export const DockerTerminal: React.FC = () => {
       onMaximize={() => setIsMaximized(!isMaximized)}
       isMaximized={isMaximized}
       theme="docker"
+      themeMode={themeMode}
+      contentRef={terminalContentRef}
     >
       {history.map((line, index) => (
         <div key={`${line.id}-${index}`} className="mb-1">
@@ -158,22 +194,43 @@ export const DockerTerminal: React.FC = () => {
             onKeyDown={handleKeyDown}
             onClick={handleCursorChange}
             onSelect={handleCursorChange}
-            className="w-full bg-transparent text-terminal-text outline-none border-none resize-none p-0 overflow-hidden leading-6 caret-transparent break-all whitespace-pre-wrap"
+            className="w-full bg-transparent text-transparent outline-none border-none resize-none p-0 overflow-hidden leading-6 caret-transparent break-all whitespace-pre-wrap"
             autoComplete="off"
             spellCheck="false"
             rows={1}
             style={{ height: "auto", minHeight: "1.5rem" }}
           />
           <div
+            aria-hidden="true"
+            className="absolute inset-0 font-mono text-sm pointer-events-none whitespace-pre-wrap break-all leading-6 text-terminal-text"
+          >
+            {input.slice(0, cursorPosition)}
+            <span id="cursor-measure">|</span>
+            {input.slice(cursorPosition)}
+          </div>
+          <div
+            ref={cursorRef}
             className="absolute top-0 w-[1ch] bg-terminal-cursor terminal-cursor pointer-events-none"
             style={{
-              left: `${cursorPosition}ch`,
-              top: "0",
-              height: "1.2rem",
+              height: "1.4rem",
               marginTop: "0.2rem",
               animation: "blink 1s step-end infinite",
             }}
           />
+          <div
+            ref={ghostRef}
+            className="absolute opacity-0 pointer-events-none whitespace-pre-wrap break-all font-mono text-sm"
+            style={{ 
+              width: textareaRef.current?.offsetWidth 
+                ? `${textareaRef.current.offsetWidth}px` 
+                : '100%',
+              lineHeight: '1.5rem'
+            }}
+          >
+            {input.slice(0, cursorPosition)}
+            <span id="cursor-measure">|</span>
+            {input.slice(cursorPosition)}
+          </div>
         </div>
       </div>
     </TerminalBase>

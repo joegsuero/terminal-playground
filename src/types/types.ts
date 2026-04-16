@@ -18,10 +18,16 @@ export interface DockerImage {
   created: string;
 }
 
+export interface TerminalSegment {
+  text: string;
+  color?: 'dir' | 'exec' | 'link' | 'compressed' | 'default';
+}
+
 export interface TerminalLine {
   id: string;
   type: "command" | "output" | "error";
   content: string;
+  segments?: TerminalSegment[];
   timestamp: Date;
 }
 
@@ -31,7 +37,8 @@ export interface Command {
   execute: (
     args: string[],
     fs: any,
-    commandHistory?: string[]
+    commandHistory?: string[],
+    stdin?: string
   ) => TerminalLine[];
 }
 
