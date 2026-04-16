@@ -168,10 +168,10 @@ export const DockerTerminal: React.FC = () => {
             className="absolute top-0 w-[1ch] bg-terminal-cursor terminal-cursor pointer-events-none"
             style={{
               left: `${cursorPosition}ch`,
-              height: "1.4rem",
+              top: "0",
+              height: "1.2rem",
               marginTop: "0.2rem",
               animation: "blink 1s step-end infinite",
-              display: input.length > 50 ? 'none' : 'block'
             }}
           />
         </div>

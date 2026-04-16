@@ -181,15 +181,11 @@ export const LinuxTerminal: React.FC = () => {
           <div
             className="absolute top-0 w-[1ch] bg-terminal-cursor terminal-cursor pointer-events-none"
             style={{
-              // Note: This coordinate calculation still only works perfectly for the first line.
-              // To support full 2D cursor for wrapping, we'd need a ghost/mirror div.
-              // I will prioritize fixing the horizontal scroll first as requested.
-              left: `${cursorPosition % 80}ch`, // Rough approximation if terminal width is 80
-              top: `${Math.floor(cursorPosition / 80) * 1.5}rem`,
+              left: `${cursorPosition}ch`,
+              top: "0",
               height: "1.2rem",
               marginTop: "0.2rem",
               animation: "blink 1s step-end infinite",
-              display: input.includes('\n') || input.length > 50 ? 'none' : 'block' // Hide cursor if it wraps to avoid misplacement
             }}
           />
         </div>
