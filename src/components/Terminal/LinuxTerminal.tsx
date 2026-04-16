@@ -9,12 +9,20 @@ interface LinuxTerminalProps {
   themeMode?: "light" | "dark";
 }
 
-export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark" }) => {
+export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({
+  themeMode = "dark",
+}) => {
   const [input, setInput] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
-  const { history, executeCommand, getPrompt, navigateHistory, currentPath, getDirectory } =
-    useLinuxCommands();
+  const {
+    history,
+    executeCommand,
+    getPrompt,
+    navigateHistory,
+    currentPath,
+    getDirectory,
+  } = useLinuxCommands();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const terminalContentRef = useRef<HTMLDivElement>(null);
@@ -37,7 +45,8 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
 
   useEffect(() => {
     if (terminalContentRef.current) {
-      terminalContentRef.current.scrollTop = terminalContentRef.current.scrollHeight;
+      terminalContentRef.current.scrollTop =
+        terminalContentRef.current.scrollHeight;
     }
   }, [history]);
 
@@ -55,7 +64,7 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
 
     ghost.style.width = `${textarea.offsetWidth}px`;
 
-    const span = ghost.querySelector('#cursor-measure') as HTMLSpanElement;
+    const span = ghost.querySelector("#cursor-measure") as HTMLSpanElement;
     if (span) {
       const spanRect = span.getBoundingClientRect();
       const ghostRect = ghost.getBoundingClientRect();
@@ -115,18 +124,22 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
       }
     } else if (e.key === "Tab") {
       e.preventDefault();
-      
+
       const textBeforeCursor = input.slice(0, cursorPosition);
       const tokens = textBeforeCursor.trim().split(/\s+/);
-      const isFirstToken = tokens.length <= 1 && !textBeforeCursor.endsWith(' ');
-      
+      const isFirstToken =
+        tokens.length <= 1 && !textBeforeCursor.endsWith(" ");
+
       const match = textBeforeCursor.match(/(\S+)$/);
-      
+
       if (!match) return;
-      
+
       const currentWord = match[0];
-      const prefix = textBeforeCursor.slice(0, textBeforeCursor.length - currentWord.length);
-      
+      const prefix = textBeforeCursor.slice(
+        0,
+        textBeforeCursor.length - currentWord.length,
+      );
+
       // If we are already cycling through matches for the same word
       if (currentWord === lastTabPrefix && tabMatches.length > 0) {
         const nextIndex = (tabIndex + 1) % tabMatches.length;
@@ -146,14 +159,18 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
         // Autocomplete commands
         const availableCommands = Object.keys(commands);
         matches = availableCommands
-          .filter((cmd) => cmd.toLowerCase().startsWith(currentWord.toLowerCase()))
+          .filter((cmd) =>
+            cmd.toLowerCase().startsWith(currentWord.toLowerCase()),
+          )
           .sort((a, b) => a.localeCompare(b));
       } else {
         // Autocomplete files/directories
         const dirContents = getDirectory(currentPath);
         matches = dirContents
-          .filter((item) => item.name.toLowerCase().startsWith(currentWord.toLowerCase()))
-          .map(item => item.name)
+          .filter((item) =>
+            item.name.toLowerCase().startsWith(currentWord.toLowerCase()),
+          )
+          .map((item) => item.name)
           .sort((a, b) => a.localeCompare(b));
       }
 
@@ -162,7 +179,7 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
         const newInput = prefix + completedName + input.slice(cursorPosition);
         setInput(newInput);
         setCursorPosition(prefix.length + completedName.length);
-        
+
         setTabMatches(matches);
         setTabIndex(0);
         setLastTabPrefix(completedName);
@@ -186,7 +203,6 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
   }, [input]);
 
   return (
-
     <TerminalBase
       title="Linux Terminal"
       icon={<Terminal className="w-4 h-4" />}
@@ -203,9 +219,11 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
                 <span
                   key={i}
                   className={
-                    seg.color === 'dir' ? 'text-blue-400 font-medium' :
-                    seg.color === 'exec' ? 'text-green-400' :
-                    'text-terminal-text'
+                    seg.color === "dir"
+                      ? "text-blue-400 font-medium"
+                      : seg.color === "exec"
+                        ? "text-green-400"
+                        : "text-terminal-text"
                   }
                 >
                   {seg.text}
@@ -218,8 +236,8 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
                 line.type === "command"
                   ? "text-terminal-prompt font-bold"
                   : line.type === "error"
-                  ? "text-red-500"
-                  : "text-terminal-text"
+                    ? "text-red-500"
+                    : "text-terminal-text"
               }`}
             >
               {line.content}
@@ -251,26 +269,24 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
             className="absolute inset-0 font-mono text-sm pointer-events-none whitespace-pre-wrap break-all leading-6 text-terminal-text"
           >
             {input.slice(0, cursorPosition)}
-            <span id="cursor-measure">|</span>
             {input.slice(cursorPosition)}
           </div>
           <div
             ref={cursorRef}
             className="absolute top-0 w-[1ch] bg-terminal-cursor terminal-cursor pointer-events-none"
             style={{
-              height: "1.2rem",
-              marginTop: "0.2rem",
+              height: "1rem",
               animation: "blink 1s step-end infinite",
             }}
           />
           <div
             ref={ghostRef}
             className="absolute opacity-0 pointer-events-none whitespace-pre-wrap break-all font-mono text-sm"
-            style={{ 
-              width: textareaRef.current?.offsetWidth 
-                ? `${textareaRef.current.offsetWidth}px` 
-                : '100%',
-              lineHeight: '1.5rem'
+            style={{
+              width: textareaRef.current?.offsetWidth
+                ? `${textareaRef.current.offsetWidth}px`
+                : "100%",
+              lineHeight: "1.5rem",
             }}
           >
             {input.slice(0, cursorPosition)}
@@ -282,5 +298,3 @@ export const LinuxTerminal: React.FC<LinuxTerminalProps> = ({ themeMode = "dark"
     </TerminalBase>
   );
 };
-
-

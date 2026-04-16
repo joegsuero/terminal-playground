@@ -205,15 +205,13 @@ export const DockerTerminal: React.FC<DockerTerminalProps> = ({ themeMode = "dar
             className="absolute inset-0 font-mono text-sm pointer-events-none whitespace-pre-wrap break-all leading-6 text-terminal-text"
           >
             {input.slice(0, cursorPosition)}
-            <span id="cursor-measure">|</span>
             {input.slice(cursorPosition)}
           </div>
           <div
             ref={cursorRef}
             className="absolute top-0 w-[1ch] bg-terminal-cursor terminal-cursor pointer-events-none"
             style={{
-              height: "1.4rem",
-              marginTop: "0.2rem",
+              height: "1rem",
               animation: "blink 1s step-end infinite",
             }}
           />
