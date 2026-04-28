@@ -59,3 +59,5 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+
+LLM_WIKI_SKILL.md
