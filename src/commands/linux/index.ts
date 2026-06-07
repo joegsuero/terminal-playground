@@ -40,7 +40,6 @@ import { exportCmd, env, unset } from "./env";
 import { ssh, scp } from "./ssh";
 import { alias, unalias } from "./alias";
 import { du } from "./du";
-import { setExport } from "./export";
 import { kill } from "./kill";
 import { sed } from "./sed";
 import { uniq } from "./uniq";

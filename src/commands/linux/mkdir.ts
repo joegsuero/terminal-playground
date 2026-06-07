@@ -1,10 +1,13 @@
-import { Command } from "@/types/types";
+import { Command, TerminalLine } from "@/types/types";
 
 export const mkdir: Command = {
   name: "mkdir",
   description: "Create directory",
   execute: (args, fs) => {
-    if (args.length === 0) {
+    const parents = args.includes("-p");
+    const dirs = args.filter((a) => !a.startsWith("-"));
+
+    if (dirs.length === 0) {
       return [
         {
           id: Date.now().toString(),
@@ -15,18 +18,20 @@ export const mkdir: Command = {
       ];
     }
 
-    const results = [];
-    for (const dir of args) {
-      if (!fs.createDirectory(dir)) {
+    const results: TerminalLine[] = [];
+    for (const dir of dirs) {
+      if (!fs.createDirectory(dir, parents)) {
+        const reason = fs.pathExists(dir)
+          ? "File exists"
+          : "No such file or directory";
         results.push({
           id: Date.now().toString() + dir,
           type: "error",
-          content: `mkdir: cannot create directory '${dir}': File exists or parent directory not found`,
+          content: `mkdir: cannot create directory '${dir}': ${reason}`,
           timestamp: new Date(),
         });
       }
     }
-
     return results;
   },
 };

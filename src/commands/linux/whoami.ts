@@ -3,11 +3,11 @@ import { Command } from "@/types/types";
 export const whoami: Command = {
   name: "whoami",
   description: "Current user",
-  execute: () => [
+  execute: (_args, fs) => [
     {
       id: Date.now().toString(),
       type: "output",
-      content: "user",
+      content: fs.envVars?.USER || "user",
       timestamp: new Date(),
     },
   ],

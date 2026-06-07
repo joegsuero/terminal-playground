@@ -1,80 +1,87 @@
-import { Command } from "@/types/types";
+import { Command, TerminalLine } from "@/types/types";
 
+const line = (type: TerminalLine["type"], content: string): TerminalLine => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  type,
+  content,
+  timestamp: new Date(),
+});
+
+/**
+ * Minimal sed supporting the substitution command:
+ *   s/pattern/replacement/[g][i]
+ * with any single-character delimiter. Reads from a file or from stdin.
+ */
 export const sed: Command = {
   name: "sed",
   description: "Stream editor",
-  execute: (args, fs) => {
-    if (args.length === 0) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: "sed: missing script",
-          timestamp: new Date(),
-        },
-      ];
+  execute: (args, fs, _history, stdin) => {
+    const operands = args.filter((a) => a !== "-e");
+    if (operands.length === 0) {
+      return [line("error", "usage: sed s/old/new/[g] [file]")];
     }
-    
-    const script = args[0];
-    const fileArg = args[1];
-    
-    if (!fileArg || fileArg.startsWith("-")) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: "sed: missing file operand",
-          timestamp: new Date(),
-        },
-      ];
+
+    const script = operands[0];
+    const fileArg = operands[1];
+
+    // Parse s<delim>pattern<delim>replacement<delim>flags
+    if (script[0] !== "s" || script.length < 4) {
+      return [line("error", `sed: -e expression #1: unknown command: '${script[0]}'`)];
     }
-    
-    const file = fs.getFile(fileArg);
-    if (!file) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: `sed: cannot read '${fileArg}': No such file or directory`,
-          timestamp: new Date(),
-        },
-      ];
-    }
-    
-    const match = script.match(/^s([^~]+)~([^~]*)~([g]?)$/);
-    if (!match) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: "sed: invalid substitution pattern. Use: s/old/new/[g]",
-          timestamp: new Date(),
-        },
-      ];
-    }
-    
-    const [, delimiter, oldStr, flag] = match;
-    const newStr = "";
-    const isGlobal = flag === "g";
-    
-    const lines = file.content.split("\n");
-    const result = lines.map(line => {
-      if (isGlobal) {
-        return line.split(delimiter + oldStr + delimiter).join(delimiter + newStr + delimiter);
+    const delim = script[1];
+    const parts: string[] = [];
+    let cur = "";
+    for (let i = 2; i < script.length; i++) {
+      if (script[i] === "\\" && script[i + 1] === delim) {
+        cur += delim;
+        i++;
+      } else if (script[i] === delim) {
+        parts.push(cur);
+        cur = "";
       } else {
-        const firstIdx = line.indexOf(delimiter + oldStr + delimiter);
-        if (firstIdx === -1) return line;
-        return line.substring(0, firstIdx) + delimiter + newStr + delimiter + line.substring(firstIdx + delimiter.length * 2 + oldStr.length);
+        cur += script[i];
       }
-    }).join("\n");
-    
-    return [
-      {
-        id: Date.now().toString(),
-        type: "output",
-        content: result,
-        timestamp: new Date(),
-      },
-    ];
+    }
+    parts.push(cur);
+
+    if (parts.length < 3) {
+      return [line("error", "sed: -e expression #1: unterminated `s' command")];
+    }
+
+    const [pattern, replacement, flags = ""] = parts;
+    const global = flags.includes("g");
+    const ignoreCase = flags.includes("i");
+
+    let regex: RegExp;
+    try {
+      regex = new RegExp(pattern, (global ? "g" : "") + (ignoreCase ? "i" : ""));
+    } catch {
+      regex = new RegExp(
+        pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        (global ? "g" : "") + (ignoreCase ? "i" : "")
+      );
+    }
+
+    let input: string;
+    if (fileArg) {
+      const file = fs.getFile(fileArg);
+      if (!file) {
+        return [line("error", `sed: can't read ${fileArg}: No such file or directory`)];
+      }
+      if (file.type === "directory") {
+        return [line("error", `sed: read error on ${fileArg}: Is a directory`)];
+      }
+      input = file.content || "";
+    } else {
+      if (stdin === undefined) return [line("error", "sed: no input file")];
+      input = stdin;
+    }
+
+    const result = input
+      .split("\n")
+      .map((l) => l.replace(regex, replacement))
+      .join("\n");
+
+    return [line("output", result)];
   },
 };
