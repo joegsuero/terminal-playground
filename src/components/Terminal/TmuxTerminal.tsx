@@ -2,14 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
-import { VirtualFileSystem } from "@/lib/vfs";
-import { ShellSession, EditorRequest } from "@/lib/ShellSession";
+import { ReplSession, EditorRequest } from "@/lib/repl";
 import { ReadlineShell } from "@/lib/ReadlineShell";
-import { prettyCwd } from "@/lib/ansi";
 import { EditorOverlay } from "./EditorOverlay";
 import { useTerminalStore } from "@/store/terminalStore";
-
-const STORAGE_KEY = "linux-vfs-v1";
 
 // ---- Pane layout tree -----------------------------------------------------
 
@@ -26,7 +22,7 @@ interface PaneRuntime {
   term: Terminal;
   fit: FitAddon;
   shell: ReadlineShell;
-  session: ShellSession;
+  session: ReplSession;
   started?: boolean;
 }
 
@@ -52,15 +48,26 @@ const removeLeaf = (node: PaneNode, id: string): PaneNode | null => {
 
 interface TmuxTerminalProps {
   themeMode?: "light" | "dark";
+  /** Create a fresh session for a new pane (sharing the backing engine). */
+  createSession: () => ReplSession;
+  /** Serialize the shared backing engine for persistence. */
+  serialize: () => string;
+  /** localStorage key under which the engine state is persisted. */
+  storageKey: string;
+  /** Accent colour for the status bar / active pane border. */
+  accent?: "green" | "cyan";
+  /** Label shown in the status bar (e.g. "playground", "docker"). */
+  label?: string;
 }
 
-export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }) => {
-  const vfsRef = useRef<VirtualFileSystem>();
-  if (!vfsRef.current) {
-    const stored = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    vfsRef.current = stored ? VirtualFileSystem.deserialize(stored) : new VirtualFileSystem();
-  }
-
+export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({
+  themeMode = "dark",
+  createSession,
+  serialize,
+  storageKey,
+  accent = "green",
+  label = "playground",
+}) => {
   const runtimes = useRef<Map<string, PaneRuntime>>(new Map());
   const prefixMode = useRef(false);
   const handlersRef = useRef<{
@@ -88,12 +95,12 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       try {
-        localStorage.setItem(STORAGE_KEY, vfsRef.current!.serialize());
+        localStorage.setItem(storageKey, serialize());
       } catch {
         /* ignore quota errors */
       }
     }, 300);
-  }, []);
+  }, [serialize, storageKey]);
 
   // ---- Pane runtime creation ---------------------------------------------
   const xtermTheme = useMemo(
@@ -117,7 +124,7 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
     const fit = new FitAddon();
     term.loadAddon(fit);
 
-    const session = new ShellSession(vfsRef.current!);
+    const session = createSession();
     const shell = new ReadlineShell(term, session, {
       onEditor: (req) => handlersRef.current.onEditor(id, req),
       onExit: () => handlersRef.current.onExit(id),
@@ -131,7 +138,7 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
 
     runtimes.current.set(id, { term, fit, shell, session });
     return id;
-  }, [xtermTheme]);
+  }, [xtermTheme, createSession]);
 
   // ---- Initial window -----------------------------------------------------
   useEffect(() => {
@@ -310,7 +317,7 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
       let message = "";
       if (rt) {
         if (result.saved) {
-          rt.session.createFile(editor.req.path, result.content);
+          rt.session.saveEditorFile?.(editor.req.path, result.content);
           persist();
           const lc = result.content.split("\n").length;
           message =
@@ -335,7 +342,24 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
 
   // ---- Rendering ----------------------------------------------------------
   const activeWindow = windows.find((w) => w.id === activeWindowId);
-  const activeCwd = runtimes.current.get(activePaneId)?.session.currentPath ?? "~";
+  const activeStatus = runtimes.current.get(activePaneId)?.session.getStatus() ?? "";
+
+  const accentCls =
+    accent === "cyan"
+      ? {
+          bar: "bg-cyan-700",
+          tag: "bg-cyan-900 text-cyan-100",
+          activeBtn: "bg-black text-cyan-300",
+          hover: "hover:bg-cyan-600",
+          border: "border-cyan-400",
+        }
+      : {
+          bar: "bg-green-700",
+          tag: "bg-green-900 text-green-100",
+          activeBtn: "bg-black text-green-300",
+          hover: "hover:bg-green-600",
+          border: "border-green-500",
+        };
 
   const renderNode = (node: PaneNode): React.ReactNode => {
     if (node.kind === "pane") {
@@ -344,6 +368,7 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
           key={node.id}
           paneId={node.id}
           active={node.id === activePaneId}
+          activeBorder={accentCls.border}
           runtimes={runtimes}
           onFocus={focusPane}
         />
@@ -370,21 +395,21 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
       {editor && <EditorOverlay request={editor.req} onClose={closeEditor} />}
 
       {/* tmux-style status bar */}
-      <div className="flex items-center justify-between px-2 py-[2px] text-xs font-mono bg-green-700 text-black select-none">
+      <div className={`flex items-center justify-between px-2 py-[2px] text-xs font-mono ${accentCls.bar} text-black select-none`}>
         <span className="flex gap-2">
-          <span className="bg-green-900 text-green-100 px-1 rounded-sm">[playground]</span>
+          <span className={`${accentCls.tag} px-1 rounded-sm`}>[{label}]</span>
           {windows.map((w, i) => (
             <button
               key={w.id}
               onClick={() => selectWindow(i)}
-              className={`px-1 ${w.id === activeWindowId ? "bg-black text-green-300" : "hover:bg-green-600"}`}
+              className={`px-1 ${w.id === activeWindowId ? accentCls.activeBtn : accentCls.hover}`}
             >
               {i}:bash{w.id === activeWindowId ? "*" : ""}
             </button>
           ))}
         </span>
         <span className="flex gap-3" data-tick={statusTick}>
-          <span className="hidden sm:inline">{prettyCwd(activeCwd)}</span>
+          <span className="hidden sm:inline">{activeStatus}</span>
           <span>{clock.toString().split(" ")[4]?.slice(0, 5)}</span>
         </span>
       </div>
@@ -397,11 +422,12 @@ export const TmuxTerminal: React.FC<TmuxTerminalProps> = ({ themeMode = "dark" }
 interface PaneViewProps {
   paneId: string;
   active: boolean;
+  activeBorder: string;
   runtimes: React.MutableRefObject<Map<string, PaneRuntime>>;
   onFocus: (id: string) => void;
 }
 
-const PaneView: React.FC<PaneViewProps> = ({ paneId, active, runtimes, onFocus }) => {
+const PaneView: React.FC<PaneViewProps> = ({ paneId, active, activeBorder, runtimes, onFocus }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -452,7 +478,7 @@ const PaneView: React.FC<PaneViewProps> = ({ paneId, active, runtimes, onFocus }
     <div
       onMouseDown={() => onFocus(paneId)}
       className={`flex-1 min-h-0 min-w-0 overflow-hidden rounded-sm border ${
-        active ? "border-green-500" : "border-transparent"
+        active ? activeBorder : "border-transparent"
       }`}
     >
       <div ref={containerRef} className="w-full h-full" />

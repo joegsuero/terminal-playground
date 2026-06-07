@@ -1,5 +1,5 @@
 import { DockerCommandFunction } from "./index";
-import { DockerContainer } from "../useDockerCommands";
+import { DockerContainer } from "@/types/types";
 
 export const handleRunCommand: DockerCommandFunction = (
   args,
@@ -16,7 +16,8 @@ export const handleRunCommand: DockerCommandFunction = (
     return "Error: No image specified";
   }
 
-  const newContainerId = Math.random().toString(36).substring(2, 14);
+  const hex = () => Math.floor(Math.random() * 16).toString(16);
+  const newContainerId = Array.from({ length: 12 }, hex).join("");
 
   if (detached) {
     const newContainer: DockerContainer = {

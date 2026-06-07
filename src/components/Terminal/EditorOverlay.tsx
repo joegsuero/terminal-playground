@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { EditorRequest } from "@/lib/ShellSession";
+import { EditorRequest } from "@/lib/repl";
 
 interface EditorOverlayProps {
   request: EditorRequest;

@@ -18,22 +18,8 @@ import {
 import { matchPattern, generateId } from "./terminalUtils";
 import { commands } from "@/commands/linux";
 import { TerminalLine } from "@/types/types";
-
-export interface EditorRequest {
-  editor: "vim" | "nano";
-  path: string;
-  content: string;
-  existed: boolean;
-}
-
-export interface ExecResult {
-  lines: TerminalLine[];
-  clear?: boolean;
-  exit?: boolean;
-  editor?: EditorRequest;
-  /** When history expansion rewrote the line, the line bash would echo. */
-  echo?: string;
-}
+import { ReplSession, ExecResult, EditorRequest, CompletionResult } from "./repl";
+import { buildPrompt, prettyCwd, ANSI } from "./ansi";
 
 const defaultEnv = (): Record<string, string> => ({
   PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
@@ -48,7 +34,7 @@ const defaultEnv = (): Record<string, string> => ({
   HOSTNAME: "linux-playground",
 });
 
-export class ShellSession {
+export class ShellSession implements ReplSession {
   vfs: VirtualFileSystem;
   cwd: string = HOME;
   envVars: Record<string, string> = defaultEnv();
@@ -473,5 +459,55 @@ export class ShellSession {
 
     const res = this.run(line, 0);
     return { ...res, echo };
+  }
+
+  // ---- ReplSession surface -----------------------------------------------
+
+  prompt(): string {
+    return buildPrompt(this);
+  }
+
+  welcome(): string {
+    return (
+      ANSI.brightGreen +
+      "Welcome to Linux Terminal Playground" +
+      ANSI.reset +
+      "\r\n" +
+      ANSI.dim +
+      'Type "help". Multiplexing: Ctrl+B then % (vsplit), " (hsplit), arrows, c, x.' +
+      ANSI.reset +
+      "\r\n\r\n"
+    );
+  }
+
+  getStatus(): string {
+    return prettyCwd(this.cwd);
+  }
+
+  saveEditorFile(path: string, content: string): void {
+    this.createFile(path, content);
+  }
+
+  complete(before: string): CompletionResult {
+    const tokens = before.split(/\s+/);
+    const isFirst = tokens.length <= 1 && !before.includes(" ");
+    const word = before.match(/(\S*)$/)?.[1] ?? "";
+
+    if (isFirst) {
+      return {
+        word,
+        options: this.commandNames.filter((n) => n.startsWith(word)).sort(),
+      };
+    }
+
+    const slash = word.lastIndexOf("/");
+    const dirPrefix = slash >= 0 ? word.slice(0, slash + 1) : "";
+    const base = slash >= 0 ? word.slice(slash + 1) : word;
+    const dirAbs = this.resolvePath(dirPrefix || ".");
+    const options = this.getDirectory(dirAbs)
+      .filter((it) => it.name.startsWith(base))
+      .map((it) => dirPrefix + it.name + (it.type === "directory" ? "/" : ""))
+      .sort();
+    return { word, options };
   }
 }

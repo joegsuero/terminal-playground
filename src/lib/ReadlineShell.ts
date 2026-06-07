@@ -1,12 +1,12 @@
 /**
- * A readline-style line editor that drives one xterm terminal against one
- * ShellSession. xterm only renders and emits raw key data, so all line editing
- * (cursor movement, kill/yank, history, completion, reverse search) lives here.
+ * A readline-style line editor that drives one xterm terminal against any
+ * ReplSession (Linux or Docker). xterm only renders and emits raw key data, so
+ * all line editing (cursor movement, kill/yank, history, completion, reverse
+ * search) lives here.
  */
 import type { Terminal } from "@xterm/xterm";
-import { ShellSession } from "./ShellSession";
-import { EditorRequest } from "./ShellSession";
-import { buildPrompt, lineToAnsi, ANSI } from "./ansi";
+import { ReplSession, EditorRequest } from "./repl";
+import { lineToAnsi } from "./ansi";
 
 interface ReadlineOptions {
   onEditor: (req: EditorRequest) => void;
@@ -16,7 +16,7 @@ interface ReadlineOptions {
 
 export class ReadlineShell {
   private term: Terminal;
-  private session: ShellSession;
+  private session: ReplSession;
   private opts: ReadlineOptions;
 
   private buffer = "";
@@ -34,7 +34,7 @@ export class ReadlineShell {
 
   private dataSub?: { dispose: () => void };
 
-  constructor(term: Terminal, session: ShellSession, opts: ReadlineOptions) {
+  constructor(term: Terminal, session: ReplSession, opts: ReadlineOptions) {
     this.term = term;
     this.session = session;
     this.opts = opts;
@@ -42,16 +42,8 @@ export class ReadlineShell {
 
   start(welcome = true) {
     if (welcome) {
-      this.term.write(
-        ANSI.brightGreen +
-          "Welcome to Linux Terminal Playground" +
-          ANSI.reset +
-          "\r\n" +
-          ANSI.dim +
-          'Type "help". Multiplexing: Ctrl+B then % (vsplit), " (hsplit), arrows, c, x.' +
-          ANSI.reset +
-          "\r\n\r\n"
-      );
+      const banner = this.session.welcome();
+      if (banner) this.term.write(banner);
     }
     this.dataSub = this.term.onData((d) => this.onData(d));
     this.prompt();
@@ -67,7 +59,7 @@ export class ReadlineShell {
   }
 
   private prompt() {
-    this.term.write(buildPrompt(this.session));
+    this.term.write(this.session.prompt());
   }
 
   /** Re-render the current input line in place. */
@@ -76,7 +68,7 @@ export class ReadlineShell {
       this.renderReverseSearch();
       return;
     }
-    const prompt = buildPrompt(this.session);
+    const prompt = this.session.prompt();
     this.term.write("\r\x1b[K" + prompt + this.buffer);
     const back = this.buffer.length - this.cursor;
     if (back > 0) this.term.write(`\x1b[${back}D`);
@@ -361,45 +353,22 @@ export class ReadlineShell {
 
   private complete() {
     const before = this.buffer.slice(0, this.cursor);
-    const tokens = before.split(/\s+/);
-    const isFirst = tokens.length <= 1 && !before.includes(" ");
-    const word = before.match(/(\S*)$/)?.[1] ?? "";
+    const { word, options } = this.session.complete(before);
+    if (options.length === 0) return;
 
-    let candidates: string[];
-    let dirPrefix = "";
-
-    if (isFirst) {
-      candidates = this.session.commandNames
-        .filter((n) => n.startsWith(word))
-        .sort();
-    } else {
-      const slash = word.lastIndexOf("/");
-      const baseDir = slash >= 0 ? word.slice(0, slash + 1) : "";
-      dirPrefix = baseDir;
-      const base = slash >= 0 ? word.slice(slash + 1) : word;
-      const dirAbs = this.session.resolvePath(baseDir || ".");
-      candidates = this.session
-        .getDirectory(dirAbs)
-        .filter((it) => it.name.startsWith(base))
-        .map((it) => it.name + (it.type === "directory" ? "/" : ""))
-        .sort();
-    }
-
-    if (candidates.length === 0) return;
-
-    if (candidates.length === 1) {
-      const completed = dirPrefix + candidates[0];
+    if (options.length === 1) {
+      const completed = options[0];
       this.replaceWord(word, completed.endsWith("/") ? completed : completed + " ");
       return;
     }
 
-    const common = this.commonPrefix(candidates);
-    const wordBase = dirPrefix ? word.slice(dirPrefix.length) : word;
-    if (common.length > wordBase.length) {
-      this.replaceWord(word, dirPrefix + common);
+    const common = this.commonPrefix(options);
+    if (common.length > word.length) {
+      this.replaceWord(word, common);
     } else {
-      // List the options, then redraw the prompt and buffer.
-      this.term.write("\r\n" + candidates.join("  ") + "\r\n");
+      // List the options (basenames only), then redraw prompt + buffer.
+      const display = options.map((o) => o.replace(/\/$/, "").split("/").pop()).join("  ");
+      this.term.write("\r\n" + display + "\r\n");
       this.refresh();
     }
   }
