@@ -1,10 +1,11 @@
-import { Command } from "@/types/types";
+import { Command, TerminalLine } from "@/types/types";
 
 export const touch: Command = {
   name: "touch",
-  description: "Create file",
+  description: "Create file or update timestamp",
   execute: (args, fs) => {
-    if (args.length === 0) {
+    const files = args.filter((a) => !a.startsWith("-"));
+    if (files.length === 0) {
       return [
         {
           id: Date.now().toString(),
@@ -15,9 +16,9 @@ export const touch: Command = {
       ];
     }
 
-    const results = [];
-    for (const file of args) {
-      if (!fs.createFile(file)) {
+    const results: TerminalLine[] = [];
+    for (const file of files) {
+      if (!fs.touchFile(file)) {
         results.push({
           id: Date.now().toString() + file,
           type: "error",
@@ -26,7 +27,6 @@ export const touch: Command = {
         });
       }
     }
-
     return results;
   },
 };

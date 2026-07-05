@@ -1,20 +1,6 @@
 import { DockerCommandFunction } from "./index";
 
-export const handleOtherCommands: DockerCommandFunction = (
-  args,
-  setContainers,
-  setImages,
-  containers
-) => {
-  const command = args[0];
-  const subcommand = args[1];
-
-  switch (command) {
-    case "docker":
-    case "docker --help":
-    case "docker --version": {
-      if (subcommand === "--help") {
-        return `Usage: docker [OPTIONS] COMMAND
+const HELP_TEXT = `Usage: docker [OPTIONS] COMMAND
 
 A self-sufficient runtime for containers
 
@@ -50,22 +36,38 @@ Commands:
   tag         Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
 
 Run 'docker COMMAND --help' for more information on a command.`;
-      }
-      if (subcommand === "--version") {
-        return `Docker version 24.0.6, build ed223bc
+
+const VERSION_TEXT = `Docker version 24.0.6, build ed223bc
 API version: 1.43
 Go version: go1.20.7
 Git commit: ed223bc
 Built: Mon Sep  4 12:32:48 2023
 OS/Arch: linux/amd64
 Context: default`;
-      }
-      return `docker: '${command}' is not a docker command. See 'docker --help'`;
-    }
+
+export const handleOtherCommands: DockerCommandFunction = (
+  args,
+  setContainers,
+  setImages,
+  containers
+) => {
+  // Normalize an optional leading "docker" so management commands work both as
+  // `docker system df` and `system df`.
+  const parts = args[0] === "docker" ? args.slice(1) : args;
+  const command = parts[0] ?? "docker";
+  const sub = parts[1];
+
+  switch (command) {
+    case "docker":
+    case "--help":
+      return HELP_TEXT;
+
+    case "--version":
+      return VERSION_TEXT;
 
     case "system": {
-      const systemSubcommand = args[2];
-      if (systemSubcommand === "prune") {
+      if (sub === "prune") {
+        const removed = containers.filter((c) => c.status === "stopped").map((c) => c.id);
         setContainers((prev) => prev.filter((c) => c.status !== "stopped"));
         return `WARNING! This will remove:
   - all stopped containers
@@ -75,55 +77,43 @@ Context: default`;
 
 Are you sure you want to continue? [y/N] y
 Deleted Containers:
-${containers
-  .filter((c) => c.status === "stopped")
-  .map((c) => c.id)
-  .join("\n")}
+${removed.join("\n")}
 
 Total reclaimed space: 1.234GB`;
       }
-      if (systemSubcommand === "df") {
+      if (sub === "df") {
         return `TYPE              TOTAL     ACTIVE    SIZE      RECLAIMABLE
 Images            5         2         523.4MB   314.2MB (60%)
 Containers        3         1         45.2MB    22.1MB (48%)
 Local Volumes     2         1         123.4MB   67.8MB (54%)
 Build Cache       0         0         0B        0B`;
       }
-      return `Error: '${systemSubcommand}' is not a valid system command. See 'docker system --help'`;
+      return `Error: '${sub ?? ""}' is not a valid system command. See 'docker system --help'`;
     }
 
     case "network": {
-      const networkSubcommand = args[2];
-      if (networkSubcommand === "ls") {
+      if (sub === "ls") {
         return `NETWORK ID      NAME      DRIVER      SCOPE
 3a4b5c6d7e8f    bridge    bridge      local
 9f8e7d6c5b4a    host      host        local
 2c3d4e5f6a7b    none      null        local`;
       }
-      return `Error: '${networkSubcommand}' is not a valid network command. See 'docker network --help'`;
+      return `Error: '${sub ?? ""}' is not a valid network command. See 'docker network --help'`;
     }
 
     case "volume": {
-      const volumeSubcommand = args[2];
-      if (volumeSubcommand === "ls") {
+      if (sub === "ls") {
         return `DRIVER    VOLUME NAME
 local     my_volume
 local     postgres_data`;
       }
-      return `Error: '${volumeSubcommand}' is not a valid volume command. See 'docker volume --help'`;
+      return `Error: '${sub ?? ""}' is not a valid volume command. See 'docker volume --help'`;
     }
 
-    case "ls": {
+    case "ls":
       return `docker-compose.yml  data/  logs/  nginx.conf`;
-    }
- 
-    default: {
-      const isDockerCommand = command === "docker";
-      return isDockerCommand 
-        ? `docker: '${subcommand}' is not a docker command. See 'docker --help'`
-        : `${command}: command not found`;
-    }
+
+    default:
+      return `docker: '${command}' is not a docker command. See 'docker --help'`;
   }
 };
-
-

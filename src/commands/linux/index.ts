@@ -40,13 +40,18 @@ import { exportCmd, env, unset } from "./env";
 import { ssh, scp } from "./ssh";
 import { alias, unalias } from "./alias";
 import { du } from "./du";
-import { setExport } from "./export";
 import { kill } from "./kill";
 import { sed } from "./sed";
 import { uniq } from "./uniq";
 import { cut } from "./cut";
 import { tr } from "./tr";
 import { jobList } from "./jobs";
+import { seq } from "./seq";
+import { tree } from "./tree";
+import { tee } from "./tee";
+import { xargs } from "./xargs";
+import { awk } from "./awk";
+import { basename, dirname, stat, diff, sleep, exitCmd } from "./misc";
 import { Command } from "@/types/types";
 
 export const commands: Record<string, Command> = {
@@ -102,4 +107,15 @@ export const commands: Record<string, Command> = {
   cut: cut,
   tr: tr,
   jobs: jobList,
+  seq: seq,
+  tree: tree,
+  tee: tee,
+  xargs: xargs,
+  awk: awk,
+  basename: basename,
+  dirname: dirname,
+  stat: stat,
+  diff: diff,
+  sleep: sleep,
+  exit: exitCmd,
 };

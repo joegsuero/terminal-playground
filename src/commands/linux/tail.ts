@@ -1,46 +1,57 @@
-import { Command } from "@/types/types";
+import { Command, TerminalLine } from "@/types/types";
+
+const line = (type: TerminalLine["type"], content: string): TerminalLine => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  type,
+  content,
+  timestamp: new Date(),
+});
+
+const parseCount = (args: string[], fallback: number): [number, string[]] => {
+  const rest: string[] = [];
+  let count = fallback;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === "-n" && args[i + 1] !== undefined) {
+      count = parseInt(args[++i].replace(/^\+/, ""), 10);
+    } else if (/^-n\d+$/.test(a)) {
+      count = parseInt(a.slice(2), 10);
+    } else if (/^-\d+$/.test(a)) {
+      count = parseInt(a.slice(1), 10);
+    } else {
+      rest.push(a);
+    }
+  }
+  if (Number.isNaN(count)) count = fallback;
+  return [count, rest];
+};
 
 export const tail: Command = {
   name: "tail",
   description: "Display last lines of file",
-  execute: (args, fs) => {
-    const filename = args[args.length - 1];
-    const numLines = args.includes("-n")
-      ? parseInt(args[args.indexOf("-n") + 1])
-      : 10;
+  execute: (args, fs, _history, stdin) => {
+    const [numLines, files] = parseCount(args, 10);
 
-    if (!filename || filename.startsWith("-")) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: "tail: missing file operand",
-          timestamp: new Date(),
-        },
-      ];
+    if (files.length === 0) {
+      if (stdin === undefined) return [line("error", "tail: missing file operand")];
+      return [line("output", stdin.split("\n").slice(-numLines).join("\n"))];
     }
 
-    const file = fs.getFile(filename);
-    if (!file) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: `tail: ${filename}: No such file or directory`,
-          timestamp: new Date(),
-        },
-      ];
+    const results: TerminalLine[] = [];
+    const showHeader = files.length > 1;
+    for (const filename of files) {
+      const file = fs.getFile(filename);
+      if (!file) {
+        results.push(line("error", `tail: cannot open '${filename}' for reading: No such file or directory`));
+        continue;
+      }
+      if (file.type === "directory") {
+        results.push(line("error", `tail: error reading '${filename}': Is a directory`));
+        continue;
+      }
+      const body = (file.content || "").split("\n").slice(-numLines).join("\n");
+      results.push(line("output", showHeader ? `==> ${filename} <==\n${body}` : body));
     }
-
-    const lines = (file.content || "").split("\n");
-    const tailLines = lines.slice(-numLines);
-    return [
-      {
-        id: Date.now().toString(),
-        type: "output",
-        content: tailLines.join("\n"),
-        timestamp: new Date(),
-      },
-    ];
+    return results;
   },
 };

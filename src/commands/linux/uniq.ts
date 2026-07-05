@@ -1,50 +1,52 @@
-import { Command } from "@/types/types";
+import { Command, TerminalLine } from "@/types/types";
+
+const line = (type: TerminalLine["type"], content: string): TerminalLine => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  type,
+  content,
+  timestamp: new Date(),
+});
 
 export const uniq: Command = {
   name: "uniq",
   description: "Report or filter repeated lines",
   execute: (args, fs, _history, stdin) => {
+    const count = args.includes("-c");
+    const onlyDup = args.includes("-d");
+    const onlyUnique = args.includes("-u");
+
     let input: string;
-    
-    if (stdin) {
+    if (stdin !== undefined) {
       input = stdin;
     } else {
-      const fileArg = args.find(arg => !arg.startsWith("-"));
-      if (!fileArg) {
-        return [
-          {
-            id: Date.now().toString(),
-            type: "error",
-            content: "uniq: missing operand",
-            timestamp: new Date(),
-          },
-        ];
-      }
-      
+      const fileArg = args.find((arg) => !arg.startsWith("-"));
+      if (!fileArg) return [line("error", "uniq: missing operand")];
       const file = fs.getFile(fileArg);
       if (!file) {
-        return [
-          {
-            id: Date.now().toString(),
-            type: "error",
-            content: `uniq: ${fileArg}: No such file or directory`,
-            timestamp: new Date(),
-          },
-        ];
+        return [line("error", `uniq: ${fileArg}: No such file or directory`)];
       }
-      input = file.content;
+      input = file.content || "";
     }
-    
-    const lines = input.split("\n").filter(line => line.trim() !== "");
-    const unique = lines.filter((line, idx) => idx === 0 || line !== lines[idx - 1]);
-    
-    return [
-      {
-        id: Date.now().toString(),
-        type: "output",
-        content: unique.join("\n"),
-        timestamp: new Date(),
-      },
-    ];
+
+    const lines = input.split("\n");
+    if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+
+    // Collapse runs of identical adjacent lines, tracking their counts.
+    const groups: { value: string; n: number }[] = [];
+    for (const l of lines) {
+      const last = groups[groups.length - 1];
+      if (last && last.value === l) last.n++;
+      else groups.push({ value: l, n: 1 });
+    }
+
+    let filtered = groups;
+    if (onlyDup) filtered = groups.filter((g) => g.n > 1);
+    if (onlyUnique) filtered = groups.filter((g) => g.n === 1);
+
+    const out = filtered
+      .map((g) => (count ? `${g.n.toString().padStart(7)} ${g.value}` : g.value))
+      .join("\n");
+
+    return [line("output", out)];
   },
 };

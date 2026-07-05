@@ -12,6 +12,8 @@ interface TerminalBaseProps {
   theme?: "linux" | "docker";
   themeMode?: "light" | "dark";
   contentRef?: React.RefObject<HTMLDivElement>;
+  /** Drop the inner padding/scroll so an embedded terminal can fill the area. */
+  noPadding?: boolean;
 }
 
 export const TerminalBase: React.FC<TerminalBaseProps> = ({
@@ -25,6 +27,7 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
   theme = "linux",
   themeMode = "dark",
   contentRef,
+  noPadding = false,
 }) => {
   const internalRef = useRef<HTMLDivElement>(null);
   const resolvedRef = contentRef || internalRef;
@@ -95,7 +98,11 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
       {/* Terminal Content */}
       <div
         ref={resolvedRef}
-        className="flex-1 p-4 font-mono text-sm overflow-y-auto terminal-scroll cursor-text"
+        className={
+          noPadding
+            ? "flex-1 min-h-0 overflow-hidden"
+            : "flex-1 p-4 font-mono text-sm overflow-y-auto terminal-scroll cursor-text"
+        }
         onClick={onTerminalClick}
       >
         {children}

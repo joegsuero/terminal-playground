@@ -1,49 +1,36 @@
+import { Command, TerminalLine } from "@/types/types";
+
+const line = (type: TerminalLine["type"], content: string): TerminalLine => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  type,
+  content,
+  timestamp: new Date(),
+});
+
 export const exportCmd: Command = {
   name: "export",
   description: "Set environment variables",
   execute: (args, fs) => {
+    // `export` with no args lists exported variables.
     if (args.length === 0) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: "export: Usage: export VAR=value",
-          timestamp: new Date(),
-        },
-      ];
+      const list = Object.entries(fs.envVars)
+        .map(([k, v]) => `declare -x ${k}="${v}"`)
+        .join("\n");
+      return [line("output", list)];
     }
 
-    const arg = args.join(" ");
-    const parts = arg.split("=");
-
-    if (parts.length < 2) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: `export: Invalid format. Usage: export VAR=value`,
-          timestamp: new Date(),
-        },
-      ];
+    for (const assignment of args) {
+      const eq = assignment.indexOf("=");
+      if (eq === -1) {
+        // export NAME (mark existing as exported) — no value, no output.
+        continue;
+      }
+      const name = assignment.slice(0, eq);
+      const value = assignment.slice(eq + 1).replace(/^["']|["']$/g, "");
+      fs.envVars[name] = value;
     }
-
-    const varName = parts[0];
-    const varValue = parts.slice(1).join("=");
-
-    // Store in a pseudo-environment (simulated)
-    if (!fs.envVars) {
-      fs.envVars = {};
-    }
-    fs.envVars[varName] = varValue;
-
-    return [
-      {
-        id: Date.now().toString(),
-        type: "output",
-        content: `export ${varName}="${varValue}"`,
-        timestamp: new Date(),
-      },
-    ];
+    // A successful assignment produces no output, like bash.
+    return [];
   },
 };
 
@@ -51,31 +38,8 @@ export const env: Command = {
   name: "env",
   description: "Print environment variables",
   execute: (_args, fs) => {
-    const envVars = fs.envVars || {};
-    const vars = Object.entries(envVars).map(
-      ([key, value]) => `${key}=${value}`,
-    );
-
-    if (vars.length === 0) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "output",
-          content:
-            "PATH=/usr/local/bin:/usr/bin:/bin\nHOME=/home/user\nUSER=user",
-          timestamp: new Date(),
-        },
-      ];
-    }
-
-    return [
-      {
-        id: Date.now().toString(),
-        type: "output",
-        content: vars.join("\n"),
-        timestamp: new Date(),
-      },
-    ];
+    const vars = Object.entries(fs.envVars).map(([k, v]) => `${k}=${v}`);
+    return [line("output", vars.join("\n"))];
   },
 };
 
@@ -84,47 +48,9 @@ export const unset: Command = {
   description: "Remove environment variables",
   execute: (args, fs) => {
     if (args.length === 0) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: "unset: Usage: unset VAR",
-          timestamp: new Date(),
-        },
-      ];
+      return [line("error", "unset: not enough arguments")];
     }
-
-    const varName = args[0];
-
-    if (fs.envVars && fs.envVars[varName]) {
-      delete fs.envVars[varName];
-      return [
-        {
-          id: Date.now().toString(),
-          type: "output",
-          content: "",
-          timestamp: new Date(),
-        },
-      ];
-    }
-
-    return [
-      {
-        id: Date.now().toString(),
-        type: "output",
-        content: "",
-        timestamp: new Date(),
-      },
-    ];
+    for (const name of args) delete fs.envVars[name];
+    return [];
   },
-};
-import { Command } from "@/types/types";
-
-const envVars: Record<string, string> = {
-  PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-  HOME: "/home/user",
-  USER: "user",
-  SHELL: "/bin/bash",
-  TERM: "xterm-256color",
-  LANG: "en_US.UTF-8",
 };

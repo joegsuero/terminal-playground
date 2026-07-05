@@ -1,59 +1,94 @@
-import { Command } from "@/types/types";
+import { Command, TerminalLine } from "@/types/types";
+
+const line = (type: TerminalLine["type"], content: string): TerminalLine => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  type,
+  content,
+  timestamp: new Date(),
+});
 
 export const grep: Command = {
   name: "grep",
   description: "Search text patterns",
-  execute: (args, fs) => {
-    if (args.length < 2) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: "grep: missing pattern or file",
-          timestamp: new Date(),
-        },
-      ];
+  execute: (args, fs, _history, stdin) => {
+    // Parse flags (supports combined forms like -in).
+    const flags = new Set<string>();
+    const operands: string[] = [];
+    for (const arg of args) {
+      if (arg.startsWith("-") && arg.length > 1) {
+        for (const ch of arg.slice(1)) flags.add(ch);
+      } else {
+        operands.push(arg);
+      }
     }
 
-    const pattern = args[0];
-    const filename = args[1];
-    const file = fs.getFile(filename);
-
-    if (!file) {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: `grep: ${filename}: No such file or directory`,
-          timestamp: new Date(),
-        },
-      ];
+    if (operands.length === 0) {
+      return [line("error", "usage: grep [-ivncE] PATTERN [FILE...]")];
     }
 
-    if (file.type === "directory") {
-      return [
-        {
-          id: Date.now().toString(),
-          type: "error",
-          content: `grep: ${filename}: Is a directory`,
-          timestamp: new Date(),
-        },
-      ];
+    const patternStr = operands[0];
+    const files = operands.slice(1);
+
+    const ignoreCase = flags.has("i");
+    const invert = flags.has("v");
+    const showNumber = flags.has("n");
+    const countOnly = flags.has("c");
+
+    let regex: RegExp;
+    try {
+      regex = new RegExp(patternStr, ignoreCase ? "i" : "");
+    } catch {
+      regex = new RegExp(
+        patternStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        ignoreCase ? "i" : ""
+      );
     }
 
-    const lines = (file.content || "").split("\n");
-    const matchingLines = lines.filter((line) => line.includes(pattern));
+    const prefixName = files.length > 1;
 
-    return [
-      {
-        id: Date.now().toString(),
-        type: "output",
-        content:
-          matchingLines.length > 0
-            ? matchingLines.join("\n")
-            : `grep: no matches found for '${pattern}'`,
-        timestamp: new Date(),
-      },
-    ];
+    const searchText = (text: string, name?: string): string[] => {
+      const lines = text.split("\n");
+      const matched: string[] = [];
+      lines.forEach((l, idx) => {
+        const isMatch = regex.test(l);
+        if (isMatch !== invert) {
+          let out = l;
+          if (showNumber) out = `${idx + 1}:${out}`;
+          if (name && prefixName) out = `${name}:${out}`;
+          matched.push(out);
+        }
+      });
+      return matched;
+    };
+
+    // stdin mode (used in pipelines).
+    if (files.length === 0) {
+      if (stdin === undefined) {
+        return [line("error", "grep: no input")];
+      }
+      const matched = searchText(stdin);
+      if (countOnly) return [line("output", String(matched.length))];
+      return matched.length > 0 ? [line("output", matched.join("\n"))] : [];
+    }
+
+    const results: TerminalLine[] = [];
+    for (const filename of files) {
+      const file = fs.getFile(filename);
+      if (!file) {
+        results.push(line("error", `grep: ${filename}: No such file or directory`));
+        continue;
+      }
+      if (file.type === "directory") {
+        results.push(line("error", `grep: ${filename}: Is a directory`));
+        continue;
+      }
+      const matched = searchText(file.content || "", filename);
+      if (countOnly) {
+        results.push(line("output", `${prefixName ? filename + ":" : ""}${matched.length}`));
+      } else if (matched.length > 0) {
+        results.push(line("output", matched.join("\n")));
+      }
+    }
+    return results;
   },
 };
